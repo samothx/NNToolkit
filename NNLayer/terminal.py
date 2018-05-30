@@ -1,7 +1,7 @@
 import numpy as np
 from NNLayer.layer import Layer
+from NNLayer.util import print_matrix
 
-verbose = False
 
 class Terminal(Layer):
     def __init__(self):
@@ -14,8 +14,6 @@ class Terminal(Layer):
         return True
 
     def process(self,a,params):
-        # if verbose:
-        #     print ("terminal.process()");
 
         res = { "Y_hat" : (a > 0.5) * 1 }
         cost = 0
@@ -26,12 +24,11 @@ class Terminal(Layer):
             # TODO: allow different cost functions / cost function plugin
             res["cost"] = -np.sum(np.multiply(y,np.log(a))+np.multiply((1-y),np.log(1-a)))/a.shape[1]
 
-
-        if verbose:
-            print("terminal: a =\n" + str(a) + "\n")
-
         if "backprop" in params:
-            res["dA"] = - (np.divide(y, a) - np.divide(1 - y, 1 - a))
+            res["dA"] = -(np.divide(y, a) - np.divide(1 - y, 1 - a))
+            if "verbose" in params:
+                print("Y:    " + print_matrix(y))
+                print("dA[" + str(super().layer_idx() - 1) + "]:" + print_matrix(res["dA"]))
 
         return res
 

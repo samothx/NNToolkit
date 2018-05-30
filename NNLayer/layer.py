@@ -1,7 +1,7 @@
 import numpy as np
 import NNLayer.activation as act
+from NNLayer.util import print_matrix
 
-verbose = True
 
 class Layer:
     def __init__(self, size, activation,local_params = True,terminal = False):
@@ -33,7 +33,7 @@ class Layer:
         self.__layer_idx = layer_idx
         self.__prev_size = prev_size
         if self.__local_params: # initialize w & b
-            self.__W = np.random.randn(self.__size, prev_size)
+            self.__W = np.random.randn(self.__size, prev_size) * 0.01
             self.__b = np.zeros((self.__size,1))
 
     def check_ready(self):
@@ -44,8 +44,6 @@ class Layer:
         self.__next_layer.check_ready()
 
     def process(self,a_in,params):
-        # if verbose:
-        #     print ("layer" + str(self.__layer_idx) + ".process()");
 
         if self.__layer_idx == 0:
             return self.__next_layer.process(a_in,params)
@@ -61,7 +59,14 @@ class Layer:
         assert a_in.shape[0] == self.__prev_size
 
         z = np.dot(w,a_in) + b
+
         a_next = self.__activation.forward(z)
+
+        if "verbose" in params:
+            print("w[" + str(self.__layer_idx) + "]: " + print_matrix(w,6))
+            print("b[" + str(self.__layer_idx) + "]: " + print_matrix(b,6))
+            print("z[" + str(self.__layer_idx) + "]: " + print_matrix(z,6))
+            print("a[" + str(self.__layer_idx) + "]: " + print_matrix(a_next, 6))
 
         res = self.__next_layer.process(a_next,params)
 
@@ -72,6 +77,9 @@ class Layer:
             dw = np.dot(dz,a_in.T)/m
             db = np.sum(dz,axis=1,keepdims=True)/m
             res["dA"] = np.dot(w.T, dz)
+            if "verbose" in params:
+                print("dA["  + str(self.__layer_idx - 1) + "]:" + print_matrix(res["dA"],6))
+
             if "update" in params:
                 if self.__local_params:
                     self.__W = w - params["alpha"] * dw
@@ -79,9 +87,6 @@ class Layer:
                 else:
                     res["W" + str(self.__layer_idx)] = w - params["alpha"] * dw
                     res["b" + str(self.__layer_idx)] = b - params["alpha"] * db
-            else:
-                res["dW" + str(self.__layer_idx)] = dw
-                res["db" + str(self.__layer_idx)] = db
         return res
 
     def size(self):
