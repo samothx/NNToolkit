@@ -5,7 +5,7 @@ from NNLayer.util import print_matrix
 
 class Terminal(Layer):
     def __init__(self):
-        super().__init__(0,None,False,True)
+        super().__init__(0,None,0,False,True)
 
     def add_layer(self, layer):
         raise ValueError("add_layer is not supposed to be called on Terminal")

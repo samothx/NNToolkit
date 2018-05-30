@@ -19,24 +19,24 @@ class Sigmoid(Activation):
     def __init__(self):
         super().__init__("sigmoid")
 
-    def forward(self, a):
-        return np.divide(1,(1 + np.exp(-a)))
+    def forward(self, z):
+        return np.divide(1,(1 + np.exp(-z)))
 
-    def get_grads(self,a):
-        a_tmp = np.exp(-a)
-        return np.divide(a_tmp,np.power(a_tmp + 1, 2))
-
+    def get_grads(self,z,da):
+        tmp = np.exp(z)
+        return np.multiply(np.divide(tmp,np.power(tmp + 1,2)),da)
+        # a = np.divide(1,1+np.exp(-z))
+        # return np.multiply(a,(a + 1))
 
 class TanH(Activation):
     def __init__(self):
         super().__init__("tanh")
 
-    def forward(self, a):
-        return np.tanh(a)
+    def forward(self, z):
+        return np.tanh(z)
 
-    def get_grads(self,a):
-        a_tmp = np.exp(-a)
-        return 1 - np.power(np.tanh(a),2)
+    def get_grads(self,z,da):
+        return np.multiply(1 - np.power(np.tanh(z),2),da)
 
 
 class ReLU(Activation):
@@ -44,13 +44,13 @@ class ReLU(Activation):
         super().__init__("relu")
         self.__ones = None
 
-    def forward(self, a):
-        return a * (a > 0)
+    def forward(self, z):
+        return (z * (z > 0))
 
-    def get_grads(self,a):
+    def get_grads(self,z,da):
         if (self.__ones is None):
-            self.__ones = np.ones(a.shape)
-        elif (a.shape != self.__ones.shape):
-            self.__ones = np.ones(a.shape)
+            self.__ones = np.ones(z.shape)
+        elif (z.shape != self.__ones.shape):
+            self.__ones = np.ones(z.shape)
 
-        return self.__ones * (a > 0)
+        return np.multiply(self.__ones * (z > 0),da)

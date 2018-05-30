@@ -4,17 +4,19 @@ from NNLayer.util import print_matrix
 
 
 class Layer:
-    def __init__(self, size, activation,local_params = True,terminal = False):
+    def __init__(self, size, activation,epsilon = 0.01,local_params = True,terminal = False):
         if terminal:
             self.__local_params = False
             self.__size = 0                     # number of input nodes to layer
             self.__activation = None            # type of activation (relu, )
+            self.__epsilon = 0
         else:
             assert act.Activation in activation.__class__.__bases__
 
             self.__local_params = local_params
             self.__size = size                  # number of input nodes to layer
             self.__activation = activation      # type of activation (relu, )
+            self.__epsilon = epsilon
 
         self.__next_layer = None             # the next layer
         self.__layer_idx = 0                # the index of this layer starting with 0
@@ -33,7 +35,7 @@ class Layer:
         self.__layer_idx = layer_idx
         self.__prev_size = prev_size
         if self.__local_params: # initialize w & b
-            self.__W = np.random.randn(self.__size, prev_size) * 0.01
+            self.__W = np.random.randn(self.__size, prev_size) * self.__epsilon
             self.__b = np.zeros((self.__size,1))
 
     def check_ready(self):
@@ -73,20 +75,28 @@ class Layer:
         if "backprop" in params:
             da = res["dA"]
             m = da.shape[1]
-            dz = self.__activation.get_grads(da);
+            dz = self.__activation.get_grads(z,da);
+            # dW = np.dot(dZ, A_prev.T) / m
             dw = np.dot(dz,a_in.T)/m
+            # db = np.sum(dZ, axis=1, keepdims=True) / m
             db = np.sum(dz,axis=1,keepdims=True)/m
+            # dA_prev = np.dot(W.T, dZ)
             res["dA"] = np.dot(w.T, dz)
-            if "verbose" in params:
-                print("dA["  + str(self.__layer_idx - 1) + "]:" + print_matrix(res["dA"],6))
 
-            if "update" in params:
+            if "verbose" in params:
+                print("dz[" + str(self.__layer_idx) + "]:" + print_matrix(dz, 6))
+                print("dW[" + str(self.__layer_idx) + "]:" + print_matrix(dw, 6))
+                print("db[" + str(self.__layer_idx) + "]:" + print_matrix(db, 6))
+                print("dA[" + str(self.__layer_idx - 1) + "]:" + print_matrix(res["dA"],6))
+
+            if "alpha" in params:
+                alpha = params["alpha"]
                 if self.__local_params:
-                    self.__W = w - params["alpha"] * dw
-                    self.__b = b - params["alpha"] * db
+                    self.__W = w - alpha * dw
+                    self.__b = b - alpha * db
                 else:
-                    res["W" + str(self.__layer_idx)] = w - params["alpha"] * dw
-                    res["b" + str(self.__layer_idx)] = b - params["alpha"] * db
+                    res["W" + str(self.__layer_idx)] = w - alpha * dw
+                    res["b" + str(self.__layer_idx)] = b - alpha * db
         return res
 
     def size(self):
