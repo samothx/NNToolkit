@@ -58,7 +58,12 @@ class Layer:
             b = params["b" + str(self.__layer_idx)]
             assert w & b & (w.shape == (self.__size,self.__prev_size)) & (b.shape == (self.__size,1))
 
+
+        if not (a_in.shape[0] == self.__prev_size):
+           print("process() layer:" + str(self.__layer_idx) + " invalid size:" + str(a_in.shape))
+
         assert a_in.shape[0] == self.__prev_size
+
 
         z = np.dot(w,a_in) + b
 

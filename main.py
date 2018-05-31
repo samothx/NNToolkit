@@ -4,9 +4,8 @@ import NNLayer.activation as act
 from NNLayer.util import print_matrix
 
 
-# TODO: adaptive learning rate
 # TODO: input normalization
-# TODO: Fuzzy XOR -> random float input X[i,j] in [0,1] -> y = XOR of (X>0.5)*1
+
 # TODO: learn to plot functions
 # try to learn n-bit XOR
 # create all tuples:
@@ -29,7 +28,7 @@ default_params = {
 
 def adapt_lr(alpha_max, alpha_min, i_max, i_curr):
     b = - i_max / (1 - alpha_max/alpha_min)
-    return alpha_max * b / (i_curr + b);
+    return alpha_max * b / (i_curr + b)
 
 
 def init_soigt():
@@ -50,7 +49,7 @@ def init_soigt():
       "activations" : [act.TanH,act.Sigmoid],
     }
 
-    width = size - 1;
+    width = size - 1
 
     while width > 1:
         # for i in range(0,2):
@@ -79,17 +78,19 @@ def init_xor():
     np.random.seed(1)
 
     size = 4
+    m = 100
 
     parameters = {
-      "alpha" : 0.1,
+      "alpha" : 1,
+      "alpha_min": 0.01,
       "verbose" : 0,
       "iterations" : 10000,
-      "epsilon" : 0.5,
-      "topology" : [],
+      "epsilon" : 0.7,
+      "topology" : [size],
       "activations" : [act.TanH,act.Sigmoid],
     }
 
-    width = size
+    width = size + 1
     while width > 1:
         for i in range(0,2):
             parameters["topology"].append(width)
@@ -101,17 +102,42 @@ def init_xor():
 
     print("topology:" + str(parameters["topology"]))
 
-    x = np.zeros((size,size * size))
-    y = np.zeros((1,size*size))
-    for i in range(0,size*size):
-        for j in range(0,size):
-            x[j,i] = (i & (1 << j)) > 0
-            y[0,i] = x[0,i]
-            for k in range(1,size):
-                y[0,i] = y[0,i] != x[k,i]
+    # Fuzzy XOR -> random float input X[i,j] in [0,1] -> y = XOR of (X>0.5)*1
+
+    x = np.random.rand(size,m)
+    x_dig = (x > 0.5)
+    y = np.zeros((1,m))
+    for i in range(0,m):
+        y_tmp = x_dig[0,i]
+        for j in range(1,size):
+            y_tmp = y_tmp != x_dig[j,i]
+        y[0,i] = y_tmp * 1
 
     parameters["X"] = x
     parameters["Y"] = y
+
+    m_t = int(m/5)
+    x = np.random.rand(size,m_t)
+    x_dig = (x > 0.5)
+    y = np.zeros((1, m_t))
+    for i in range(0,m_t):
+        y_tmp = x_dig[0,i]
+        for j in range(1,size):
+            y_tmp = y_tmp != x_dig[j,i]
+        y[0,i] = y_tmp * 1
+
+    parameters["X_t"] = x
+    parameters["Y_t"] = y
+
+    #x = np.zeros((size,size * size))
+    #y = np.zeros((1,size*size))
+    #for i in range(0,size*size):
+    #    for j in range(0,size):
+    #        x[j,i] = (i & (1 << j)) > 0
+    #        y[0,i] = x[0,i]
+    #        for k in range(1,size):
+    #            y[0,i] = y[0,i] != x[k,i]
+
     return parameters
 
 
@@ -166,13 +192,13 @@ def learn(parameters):
     res = network.process(parameters["X_t"],{})
     err = res["Y_hat"] - parameters["Y_t"]
     acc = (1 - np.squeeze(np.dot(err,err.T))/parameters["Y_t"].shape[1]) * 100
-    print("test accuracy:" + str(acc) + "%")
+    print("test accuracy:    " + str(acc) + "%")
 
     return network
 
 
-# learn(init_xor())
-learn(init_soigt())
+learn(init_xor())
+# learn(init_soigt())
 
 # alpha_max = 0.1
 # alpha_min = 0.01
