@@ -77,7 +77,7 @@ class Layer:
 
         res = self.__next_layer.process(a_next,params)
 
-        if "backprop" in params:
+        if ("backprop" in params) & (self.__layer_idx > 0):
             da = res["dA"]
             m = da.shape[1]
             dz = self.__activation.get_grads(z,da)

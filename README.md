@@ -1,7 +1,7 @@
 # NNToolkit
 A Neural Network Playground - neural network implementation in python based on numPy.
 The code puts together the learnings from Coursea courses on Machine Learning and Deep Learning (https://www.coursera.org/learn/deep-neural-network).
-It implements a multi-layered neural network and functions to train it or to evaluate it. The main motivation is to get experence with neural networks, their implementation and their opimization. 
+It implements a multi-layered neural network and functions to train it or to evaluate it. The main motivation is to get experence with neural networks, their implementation and their optimization. 
 
 ## Architecture
 I am rather new to python so some of the code might be a little clumsy. 
@@ -20,11 +20,32 @@ result vector Y_hat and if configured to do so the cost function and the derivat
 the activation A. These values are handed back to the calling function and travel back up the recursive chain. 
 The Terminal class will be replaced by a set of classes that represent other result types. The current implementation 
 only implements the functionality for classification problems.   
-- Class **Activation** - a set of classes, Sigmoid, TanH and ReLU that compute the derivatives of the 
-activation function. Input is Z and dA the derivatives handed back from the next layer. Each layer uses an 
+- Class **Activation** - a set of classes, Sigmoid, TanH and ReLU that compute the activation function and its derivatives. 
+Input is Z and dA the derivatives handed back from the next layer. Each layer uses an 
 instance of one of these classes to compute the activation function and the derivatives.
 
 Further modules provide helper functions to create networks from parameters and to learn and evaluate a network.    
+
+## Features 
+
+This is work in progress. So far the network supports the following features:
+- Supervised machine learning
+- Currently supports only classification problems
+. supports activation functions ReLU, Tanh, Sigmoid
+- Free choice of topography
+- Various hyper parameters. 
+- Basic built in gradient descent
+- Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
+
+
+## Todos
+Soon to be added missing Features are:
+- Support for normalization of input
+- Regularization
+- Support for more activation functions
+- Support for linear regression Problems
+ 
+I will update this project while the courses I am hearing progress and add more advanced features.     
 
 ## Test Cases
 Current test cases are rather simple self-generated input. I have managed to get the network to learn the 
@@ -35,7 +56,7 @@ A corresponding (row-)vector y that is 1 for every column of X that has a mean v
 The task for the network is to learn if a vectors mean value is greater 10 (1) or less (0).
 The current implementation manages to find parameters that learn this projection with a training accuracy 
 of 99.8% and a test accuracy of 99.5%. This is the interesting part as it gives you hands on experience in 
-how to actually find the right parameters to make a neural twork converge and find a good solution.  
+how to actually find the right parameters to make a neural network converge and find a good solution.  
 
 I am still working to find a network that will solve my second test case: A fuzzy XOR. I started with a 'digital' XOR 
 meaning 16 Vectors of 4 values 1 or 0. Basically these vectors were the binary representation of the numbers 
@@ -60,7 +81,7 @@ for i in range(0,16):
 ```    
 Unfortunately so far I was not able to find a network willing to learn this function.
 Meanwhile I have fallen back to the following fuzzy implementation that performs only little 
-better but allows me to create bigger datasets that m = 2^n:
+better but allows me to create bigger datasets than m = 2^n:
 ```python
     def rand_data(n,m):
         x = np.random.rand(n,m)
@@ -74,26 +95,6 @@ better but allows me to create bigger datasets that m = 2^n:
         return x,y
 ``` 
 
-## Features 
-
-This is work in progress. So far the network supports the following features:
-- Supervised machine learning
-- Currently supports only classification problems
-. supports activation functions ReLU, Tanh, Sigmoid
-- Free choice of topography
-- Various hyper parameters. 
-- Basic built in gradient descent
-- Allows to supply parameters from outside to enable external mininmization algorithms. This feature is only a built in concept and has not been tested.
-
-
-## Todos
-Missing Features are:
-- Support for normalization of input
-- Regularization
-- Support for more activation functions
-- Support for linear regression Problems
- 
-I will update this project while the courses I am hearing progress and add more advanced features.     
  
 ## License ##
 Feel free to fork this repository and use as you like.
