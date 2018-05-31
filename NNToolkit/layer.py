@@ -116,4 +116,13 @@ class Layer:
         else:
             return out
 
+    def get_weights(self,dict):
+        if self.__layer_idx > 0:
+#            assert hasattr(self, '__W')
+#            assert hasattr(self, '__b')
+            dict["W" + str(self.__layer_idx)] = self.__W
+            dict["b" + str(self.__layer_idx)] = self.__b
+
+        if self.__next_layer is not None:
+            self.__next_layer.get_weights(dict)
 

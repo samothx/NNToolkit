@@ -2,6 +2,9 @@ import numpy as np
 import NNToolkit.activation as act
 from NNToolkit.util import print_matrix
 from NNToolkit.manage import learn
+from NNToolkit.util import save_params
+from NNToolkit.util import read_params
+# from NNToolkit.manage import read_params
 
 # TODO: input normalization
 # TODO: learn to plot functions
@@ -9,13 +12,12 @@ from NNToolkit.manage import learn
 # create all tuples:
 
 
-def init_soigt():
+def init_soigt(m = 1000):
     np.random.seed(1)
 
     threshold = 20
     offset = 10
     size = 5
-    m = 1000
 
     parameters = {
       "alpha" : 1,
@@ -49,6 +51,7 @@ def init_soigt():
         print("X:  " + print_matrix(parameters["X"],4))
         print("Y:  " + print_matrix(parameters["Y"], 4))
 
+    # save_json_params(parameters,"testCases/sum_of_int_gt.pkl")
     return parameters
 
 
@@ -120,5 +123,12 @@ def init_xor():
 
 # test_adapt_alpha()
 # learn(init_xor())
-learn(init_soigt())
+# learn(init_soigt())
+
+#params = init_soigt()
+#network = learn(params)
+#network.get_weights(params)
+#save_params(params,"testCases/sum_of_int_gt_1000.json.gz",True)
+params = read_params("testCases/sum_of_int_gt_1000.json.gz")
+
 

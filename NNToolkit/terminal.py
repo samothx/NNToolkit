@@ -34,3 +34,6 @@ class Terminal(Layer):
 
     def __str__(self):
         return " "*super().layer_idx() + "[type: terminal idx:" + str(super().layer_idx()) + "]"
+
+    def get_weights(self, dict):
+        pass

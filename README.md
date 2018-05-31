@@ -36,6 +36,7 @@ This is work in progress. So far the network supports the following features:
 - Various hyper parameters. 
 - Basic built in gradient descent
 - Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
+- Save/load network parameters to/from file
 
 
 ## Todos
@@ -46,6 +47,10 @@ Soon to be added missing Features are:
 - Support for linear regression Problems
  
 I will update this project while the courses I am hearing progress and add more advanced features.     
+
+## Example Code
+
+Currently in main.py. More examples will follow..
 
 ## Test Cases
 Current test cases are rather simple self-generated input. I have managed to get the network to learn the 

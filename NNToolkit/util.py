@@ -1,4 +1,8 @@
 import numpy as np
+# import pickle
+import json
+import gzip
+import re
 
 # parameters:
 # alpha_max:  max learning rate
@@ -40,3 +44,78 @@ def print_matrix(matrix,padding = 0):
         res += "]"
     res += "]"
     return res
+
+# save parameters to json file / gzipped json file
+
+def save_params(parameters, filename, zip=True):
+    out = { "np_ndarrays" : [] }
+    for key in parameters:
+        value = parameters[key]
+        if key == "activations":
+            act_names = []
+            for act_obj in value:
+                act_names.append(str(act_obj))
+            # print("act_names" + str(act_names))
+            out["activations"] = act_names
+        elif isinstance(value, np.ndarray):
+            out[key] = value.tolist()
+            out["np_ndarrays"].append(key)
+        else:
+            out[key] = value
+
+    dump = json.dumps(out)
+
+    if zip is True:
+        with gzip.open(filename, 'wb') as f:
+            f.write(dump.encode('utf-8'))
+    else:
+        f = open(filename, "w")
+        f.write(dump)
+        f.close()
+
+# recover parameters from json file / gzipped json file
+
+def read_params(filename,zip = True):
+    def import_class(name):
+        components = name.split('.')
+        mod = __import__(components[0])
+        for comp in components[1:]:
+            mod = getattr(mod, comp)
+        return mod
+
+    data = ''
+    if zip is True:
+        with gzip.open(filename,"rb") as f:
+            data = json.loads(f.read().decode("utf-8"))
+    else:
+        f = open(filename, "r")
+        data = json.load(f)
+
+    # print("loaded:\n" + str(data))
+
+    if "np_ndarrays" in data:
+        np_ndarrays = data["np_ndarrays"]
+        del data["np_ndarrays"]
+    else:
+        np_ndarrays = []
+
+    out = {}
+    for key in data:
+        value = data[key]
+        if key == "activations":
+            # sample <class 'NNToolkit.activation.TanH'>
+            pattern = re.compile("^<class '([^']+)'>$")
+            activations = []
+            for act_name in value:
+                match = pattern.fullmatch(act_name)
+                assert match is not None
+                name = match.group(1)
+                activations.append(import_class(name))
+            out["activations"] = activations
+        elif key in np_ndarrays:
+            out[key] = np.array(value)
+        else:
+            out[key] = value
+    # print("out:" + str(out))
+    return out
+
