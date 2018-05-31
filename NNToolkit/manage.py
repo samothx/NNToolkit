@@ -1,6 +1,4 @@
 import numpy as np
-import pickle
-import json
 
 import NNToolkit.activation as act
 
@@ -8,61 +6,88 @@ from NNToolkit.terminal import Terminal
 from NNToolkit.layer import Layer
 from NNToolkit.util import adapt_lr
 from NNToolkit.util import print_matrix
+from NNToolkit.util import read_params
 
 default_params = {
       "local_params": True,     # initialize & cache W,b in layer
-      "alpha" : 0.01,           # learning rate alpha - also triggers update of W,b in layers
-      "alpha_min" : 0.01,       # when < alpha triggers adaptive learn rate
-      "verbose" : 0,            # levels of verbsity 0-3
-      "iterations" : 3000,      # how many iterations of grdient descent
-      "epsilon" : 0.01,         # min/max element size for initialization of W
-      "activations" : [act.TanH,act.Sigmoid],    # activation function either 2 or one for each layer
-      "topology" : []           # array of layer sizes
+      "alpha": 0.01,            # learning rate alpha - also triggers update of W,b in layers
+      "alpha_min": 0.01,        # when < alpha triggers adaptive learn rate
+      "verbose": 0,             # levels of verbsity 0-3
+      "iterations": 3000,       # how many iterations of grdient descent
+      "epsilon": 0.01,          # min/max element size for initialization of W
+      "activations": [act.TanH, act.Sigmoid],    # activation function either 2 or one for each layer
+      "topology": []            # array of layer sizes
       # "X": [[]]               # training input vectors
       # "Y": [[]]               # training output vectors
       # "X_t" : [[]]            # test input vectors
       # "Y_t" : [[]]            # test output vectors
-    }
+      # "W": [[]]               # computed weights
+      # "b": [[]]               # computes interceptors
+}
+
 
 def create(parameters):
+    def make_activations(first,last,layers):
+        act_list = []
+        for i in range(1,layers - 1):
+            act_list.append(first)
+        act_list.append(last)
+        return act_list
+
     assert "topology" in parameters
     layer_sizes = parameters["topology"]
     layers = len(layer_sizes)
     assert layers > 0
 
-    if not "activations" in parameters:
-        activations = (act.TanH,act.Sigmoid)
+    # add some defaults for optional parameters
+
+    if "activations" not in parameters:
+        activations = make_activations(act.TanH,act.Sigmoid,layers)
     else:
         activations = parameters["activations"]
+        if len(activations) < (layers - 1):
+            activations = make_activations(activations[0],activations[1],layers)
 
-    if not "epsilon" in parameters:
+    print("layers:" + str(layers) + " activations:" + str(len(activations)))
+
+    if "epsilon" not in parameters:
         epsilon = 0.01
     else:
         epsilon = parameters["epsilon"]
 
-    if not "local_params" in parameters:
+    if "local_params" not in parameters:
         local_params = True
     else:
         local_params = parameters["local_params"]
 
+    def_layer_params = { "epsilon": epsilon, "local_params": local_params }
+    root = None
 
-    if len(activations) >= layers:
-        root = Layer(layer_sizes[0], activations[0], epsilon,local_params)
-        for i in range(1, layers):
-            root.add_layer(Layer(layer_sizes[i], activations[i],epsilon, local_params))
-    else:
-        first_act = activations[0]
-        last_act = activations[1]
-        if layers == 1:
-            first_act = activations[1]
-        root = Layer(layer_sizes[0], first_act(),epsilon, local_params)
-        for i in range(1, layers - 1):
-            root.add_layer(Layer(layer_sizes[i], first_act(),epsilon, local_params))
-        root.add_layer(Layer(layer_sizes[layers - 1], last_act(), epsilon, local_params))
+    for i in range(0,len(layer_sizes)):
+        layer_params = def_layer_params
+        layer_params["size"] = layer_sizes[i]
+
+        if i == 0:
+            # layer 0 only needs size
+            root = Layer(layer_params)
+        else:
+            # get the activations right
+            layer_params["activation"] = activations[i - 1]()
+            if local_params:
+                name = "W" + str(i)
+                if name in parameters:
+                    layer_params["W"] = parameters[name]
+                    name = "b" + str(i)
+                if name in parameters:
+                    layer_params["b"] = parameters[name]
+            root.add_layer(Layer(layer_params))
 
     root.add_layer(Terminal())
     return root
 
+def fromParamFile(filename,zip = True):
+    parameters = read_params(filename,zip)
+    return create(parameters)
 
 def evaluate(network, x, y = None):
     # print("network:\n" + str(network) + "\n")
