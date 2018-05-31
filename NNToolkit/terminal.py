@@ -8,7 +8,7 @@ class Terminal(Layer):
         super().__init__(0,None,0,False,True)
 
     def add_layer(self, layer):
-        raise ValueError("add_layer is not supposed to be called on Terminal")
+        raise ValueError("add_layer is not supposed to be called on class Terminal")
 
     def check_ready(self):
         return True

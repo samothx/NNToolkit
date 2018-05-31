@@ -62,6 +62,17 @@ def create(parameters):
     return root
 
 
+def evaluate(network, x, y = None):
+    # print("network:\n" + str(network) + "\n")
+    res = network.process(x,{})
+    acc = None
+    if y is not None:
+        err = res["Y_hat"] - y
+        acc = (1 - np.squeeze(np.dot(err, err.T)) / y.shape[1])
+
+    return res["Y_hat"],acc
+
+
 def learn(parameters):
     network = create(parameters)
     print("network:\n" + str(network) + "\n")
@@ -105,14 +116,10 @@ def learn(parameters):
     if "cost" in res:
         print("last -  cost:" + str(res["cost"]))
 
-    res = network.process(x,{})
-    err = res["Y_hat"] - parameters["Y"]
-    acc = (1 - np.squeeze(np.dot(err,err.T))/parameters["Y"].shape[1]) * 100
-    print("training accuracy:" + str(acc) + "%")
+    y_hat, acc = evaluate(network,x,parameters["Y"])
+    print("training accuracy:" + str(acc*100) + "%")
 
-    res = network.process(parameters["X_t"],{})
-    err = res["Y_hat"] - parameters["Y_t"]
-    acc = (1 - np.squeeze(np.dot(err,err.T))/parameters["Y_t"].shape[1]) * 100
-    print("test accuracy:    " + str(acc) + "%")
+    y_hat, acc = evaluate(network,parameters["X_t"],parameters["Y_t"])
+    print("test accuracy:    " + str(acc*100) + "%")
 
     return network
