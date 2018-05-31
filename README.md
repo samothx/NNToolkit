@@ -62,37 +62,40 @@ I am still working to find a network that will solve my second test case: A fuzz
 meaning 16 Vectors of 4 values 1 or 0. Basically these vectors were the binary representation of the numbers 
 0-15. From these vectors I computed a XOR by going through the vector top down as follows:
 ```python
-n = 4
-m = 2**n
-X = np.zeros((n,m))
-Y = np.zeros((1,m))
 
-for i in range(0,16):
-    for j in range(0,n):
-        if i & (1<<j):
-            X[j,i] = 1
-        else:
-            X[j,i] = 0         
-        if j == 0:
-            tmp = X[j,i]
-        else:
-            tmp = tmp != X[j,i]
-    Y[0,i] = tmp   
+def rand_data(n):
+    m = 2**n
+    X = np.zeros((n,m))
+    Y = np.zeros((1,m))
+
+    for i in range(0,m):
+        tmp = 0
+        for j in range(0,n):
+            X[j,i] = (i & (1 << j)) > 0
+            if j == 0:
+                tmp = X[j,i]
+            else:
+                tmp = tmp != X[j,i]
+        Y[0,i] = tmp   
+    Y = Y * 1
+    X = X * 1
+    return X,Y
+
 ```    
 Unfortunately so far I was not able to find a network willing to learn this function.
 Meanwhile I have fallen back to the following fuzzy implementation that performs only little 
 better but allows me to create bigger datasets than m = 2^n:
 ```python
-    def rand_data(n,m):
-        x = np.random.rand(n,m)
-        x_dig = (x > 0.5)
-        y = np.zeros((1,m))
-        for i in range(0, m):
-            y_tmp = x_dig[0, i]
-            for j in range(1, n):
-                y_tmp = y_tmp != x_dig[j, i]
-            y[0, i] = y_tmp * 1
-        return x,y
+def rand_data(n,m):
+    x = np.random.rand(n,m)
+    x_dig = (x > 0.5)
+    y = np.zeros((1,m))
+    for i in range(0, m):
+        y_tmp = x_dig[0, i]
+        for j in range(1, n):
+            y_tmp = y_tmp != x_dig[j, i]
+        y[0, i] = y_tmp * 1
+    return x,y
 ``` 
 
  
