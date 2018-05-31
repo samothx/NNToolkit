@@ -50,7 +50,7 @@ I will update this project while the courses I am hearing progress and add more 
 
 ## Example Code
 
-Currently in main.py. More examples will follow..
+Samples are in the sample sub directory
 
 ## Test Cases
 Current test cases are rather simple self-generated input. I have managed to get the network to learn the 
