@@ -1,6 +1,6 @@
 import numpy as np
-from NNLayer.layer import Layer
-from NNLayer.util import print_matrix
+from NNToolkit.layer import Layer
+from NNToolkit.util import print_matrix
 
 
 class Terminal(Layer):

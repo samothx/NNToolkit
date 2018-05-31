@@ -1,65 +1,12 @@
 import numpy as np
-import NNLayer.create_network as cn
-import NNLayer.activation as act
-from NNLayer.util import print_matrix
-
+import NNToolkit.activation as act
+from NNToolkit.util import print_matrix
+from NNToolkit.manage import learn
 
 # TODO: input normalization
 # TODO: learn to plot functions
-# TODO: put on github
 # try to learn n-bit XOR
 # create all tuples:
-
-
-default_params = {
-      "alpha" : 0.01,           # learning rate alpha - also triggers update of W,b in layers
-      "alpha_min" : 0.01,       # when < alpha triggers adaptive learn rate
-      "verbose" : 0,            # levels of verbsity 0-3
-      "iterations" : 3000,      # how many iterations of grdient descent
-      "epsilon" : 0.01,         # min/max element size for initialization of W
-      "activations" : [act.TanH,act.Sigmoid],    # activation function either 2 or one for each layer
-      "topology" : []           # array of layer sizes
-      # "X": [[]]               # training input vectors
-      # "Y": [[]]               # training output vectors
-      # "X_t" : [[]]            # test input vectors
-      # "Y_t" : [[]]            # test output vectors
-    }
-
-
-# adaptive learning rate, so that
-# adapt_lr(alpha_max, alpha_min, i_max, 0)      = alpha_max
-# adapt_lr(alpha_max, alpha_min, i_max, i_max)  = alpha_min
-# idea: calculate a, b so that a/(b + i_curr) = alpha_max for i_curr = 0
-
-# cache values of b for tuples (alpha_max, alpha_min, i_max)
-alpha_params = {}
-
-
-def adapt_lr(alpha_max, alpha_min, i_max, i_curr):
-    if (alpha_max, alpha_min, i_max) in alpha_params:
-        b = alpha_params[(alpha_max, alpha_min, i_max)]
-    else:
-        alpha_params[(alpha_max, alpha_min, i_max)] = b = - i_max / (1 - alpha_max/alpha_min)
-    return alpha_max * b / (i_curr + b)
-
-
-def test_adapt_alpha():
-    alpha_max = 0.1
-    alpha_min = 0.01
-    i_max = 10000
-    i_cur = 0
-
-    print(
-        "alpha max:" + "{:6.2f}".format(alpha_max) + " min:" + "{:6.2f}".format(alpha_min) + " i max:" + "{:6d}".format(
-            i_max) +
-        " curr:" + "{:6d}".format(i_cur) + " alpha:" + "{:8.4f}".format(adapt_lr(alpha_max, alpha_min, i_max, i_cur)))
-
-    for i in range(0, 21):
-        i_cur = int(i_max * i / 20)
-        print("alpha max:" + "{:6.2f}".format(alpha_max) + " min:" + "{:6.2f}".format(
-            alpha_min) + " i max:" + "{:6d}".format(i_max) +
-              " curr:" + "{:6d}".format(i_cur) + " alpha:" + "{:8.4f}".format(
-            adapt_lr(alpha_max, alpha_min, i_max, i_cur)))
 
 
 def init_soigt():
@@ -171,65 +118,7 @@ def init_xor():
     return parameters
 
 
-def learn(parameters):
-    network = cn.create_network(parameters["topology"],parameters["activations"],parameters["epsilon"])
-    print("network:\n" + str(network) + "\n")
-
-    x = parameters["X"]
-    y = parameters["Y"]
-    verbose = parameters["verbose"]
-    iterations = parameters["iterations"]
-
-    if parameters["verbose"] > 0:
-        print("X:    " + print_matrix(parameters["X"],6))
-        print("Y:    " + print_matrix(parameters["Y"],6))
-
-    params = {"Y":y, "backprop":True, "alpha":parameters["alpha"] }
-
-    if verbose > 2:
-        params["verbose"] = True
-
-    for i in range(0,iterations):
-        if ("alpha_min" in parameters) & (i > 0) & ((i % 100) == 0):
-            if parameters["alpha_min"] < parameters["alpha"]:
-                params["alpha"] = adapt_lr(parameters["alpha"],parameters["alpha_min"],iterations,i)
-
-        if (verbose > 1) & (((i % (iterations / 10)) == 0)):
-            params["verbose"] = True
-            print("iteration: " + str(i))
-        res = network.process(x, params)
-        if (verbose < 3) & ("verbose" in params):
-            del params["verbose"]
-        if verbose > 1:
-            print("Y_hat:" + print_matrix(res["Y_hat"], 6) + "\n")
-            print("Y    :" + print_matrix(params["Y"], 6) + "\n")
-        if (verbose > 2) | (((i % (iterations / 10)) == 0) & ("cost" in res)):
-            print("{:5d}".format(i) + " - cost:" + str(res["cost"]))
-            if verbose > 1:
-                print("***********************************************")
-
-    if verbose >= 1:
-        params["verbose"] = True
-    res = network.process(x, params)
-    if "cost" in res:
-        print("last -  cost:" + str(res["cost"]))
-
-    res = network.process(x,{})
-    err = res["Y_hat"] - parameters["Y"]
-    acc = (1 - np.squeeze(np.dot(err,err.T))/parameters["Y"].shape[1]) * 100
-    print("training accuracy:" + str(acc) + "%")
-
-    res = network.process(parameters["X_t"],{})
-    err = res["Y_hat"] - parameters["Y_t"]
-    acc = (1 - np.squeeze(np.dot(err,err.T))/parameters["Y_t"].shape[1]) * 100
-    print("test accuracy:    " + str(acc) + "%")
-
-    return network
-
-
-
-
 # test_adapt_alpha()
-learn(init_xor())
-# learn(init_soigt())
+# learn(init_xor())
+learn(init_soigt())
 

@@ -1,6 +1,6 @@
 import numpy as np
-import NNLayer.activation as act
-from NNLayer.util import print_matrix
+import NNToolkit.activation as act
+from NNToolkit.util import print_matrix
 
 
 class Layer:
