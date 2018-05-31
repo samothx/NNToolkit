@@ -80,7 +80,7 @@ class Layer:
         if "backprop" in params:
             da = res["dA"]
             m = da.shape[1]
-            dz = self.__activation.get_grads(z,da);
+            dz = self.__activation.get_grads(z,da)
             # dW = np.dot(dZ, A_prev.T) / m
             dw = np.dot(dz,a_in.T)/m
             # db = np.sum(dZ, axis=1, keepdims=True) / m
