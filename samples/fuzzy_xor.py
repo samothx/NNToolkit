@@ -1,17 +1,10 @@
 import numpy as np
 import NNToolkit.activation as act
-from NNToolkit.util import print_matrix
 from NNToolkit.manage import learn
 from NNToolkit.manage import create
 from NNToolkit.manage import evaluate
 from NNToolkit.util import save_params
 from NNToolkit.util import read_params
-# from NNToolkit.manage import read_params
-
-# TODO: input normalization
-# TODO: learn to plot functions
-# try to learn n-bit XOR
-# create all tuples:
 
 
 def init_xor(m = 100):
@@ -78,12 +71,12 @@ def init_xor(m = 100):
     return parameters
 
 
-
 def train_xor(m = 100):
     params = init_xor(m)
     network = learn(params)
     network.get_weights(params)
     save_params(params, "../testCases/fuzzy_xor_" + str(m) + ".json.gz")
+
 
 def restore_xor(m = 100):
     params = read_params("../testCases/fuzzy_xor_" + str(m) + ".json.gz")

@@ -15,7 +15,7 @@ default_params = {
       "verbose": 0,             # levels of verbsity 0-3
       "iterations": 3000,       # how many iterations of grdient descent
       "epsilon": 0.01,          # min/max element size for initialization of W
-      "activations": [act.TanH, act.Sigmoid],    # activation function either 2 or one for each layer
+      "activations": [act.Sigmoid],    # activation function either 2 or one for each layer
       "topology": []            # array of layer sizes
       # "X": [[]]               # training input vectors
       # "Y": [[]]               # training output vectors
@@ -28,19 +28,25 @@ default_params = {
 
 def create(parameters):
     def make_activations(first,last,layers):
-        act_list = []
-        for i in range(1,layers - 1):
-            act_list.append(first)
-        act_list.append(last)
-        return act_list
+        print("make_activations")
+        if layers > 2:
+            act_list = []
+            for i in range(1,layers - 1):
+                act_list.append(first)
+            act_list.append(last)
+            return act_list
+        else:
+            return [last]
+
 
     assert "topology" in parameters
     layer_sizes = parameters["topology"]
     layers = len(layer_sizes)
-    assert layers > 0
+    assert layers > 1
 
     # add some defaults for optional parameters
 
+    print("before layers:" + str(layers) + " activations:" + str(parameters["activations"]))
     if "activations" not in parameters:
         activations = make_activations(act.TanH,act.Sigmoid,layers)
     else:
@@ -48,7 +54,7 @@ def create(parameters):
         if len(activations) < (layers - 1):
             activations = make_activations(activations[0],activations[1],layers)
 
-    print("layers:" + str(layers) + " activations:" + str(len(activations)))
+    print("after layers:" + str(layers) + " activations:" + str(activations))
 
     if "epsilon" not in parameters:
         epsilon = 0.01

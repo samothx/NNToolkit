@@ -86,7 +86,7 @@ def init_xor():
       "iterations" : 10000,
       "epsilon" : 0.7,
       "topology" : [size],
-      "activations" : [act.TanH,act.Sigmoid],
+      "activations" : [act.Sigmoid],   # [act.TanH,act.Sigmoid],
     }
 
     width = size + 1

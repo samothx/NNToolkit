@@ -33,7 +33,8 @@ This is work in progress. So far the network supports the following features:
 - Currently supports only classification problems
 . supports activation functions ReLU, Tanh, Sigmoid
 - Free choice of topography
-- Various hyper parameters. 
+- Various hyper parameters.
+- Adaptive learn rate 
 - Basic built in gradient descent
 - Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
 - Save/load network parameters to/from file

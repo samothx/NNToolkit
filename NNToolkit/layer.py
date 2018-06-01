@@ -59,6 +59,8 @@ class Layer:
                     self.__W = np.random.randn(self.__size, prev_size) * self.__epsilon
                 if self.__b is None:  # initialize b
                     self.__b = np.zeros((self.__size, 1))
+        else:
+            self.__layer_idx = layer_idx
 
     def check_ready(self):
         assert self.__size > 0

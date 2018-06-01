@@ -14,26 +14,25 @@ def init_mean_gt(m = 1000):
     offset = 10
     size = 5
 
-    parameters = {
-      "alpha" : 1,
-      "alpha_min": 0.005,
-      "verbose" : 0,
-      "iterations" : 25000,
-      "epsilon" : 0.5,
-      "topology" : [size],
-      "activations" : [act.TanH,act.Sigmoid],
-    }
+    parameters = {"alpha": 0.03,
+                  "alpha_min": 0.01,
+                  "verbose": 0,
+                  "iterations": 8000,
+                  "epsilon": 0.005,
+                  "topology": [size, size, 1],
+                  "activations": [act.TanH,act.Sigmoid]  # [act.TanH, act.Sigmoid]
+                  }
 
-    width = size - 1
+#    width = size - 1
 
-    while width > 1:
+#    while width > 1:
         # for i in range(0,2):
-        parameters["topology"].append(width)
-        if width % 2 == 1:
-            width -= 1
-        else:
-            width = int(width/2)
-    parameters["topology"].append(1)
+#        parameters["topology"].append(width)
+#        if width % 2 == 1:
+#            width -= 1
+#        else:
+#            width = int(width/2)
+#    parameters["topology"].append(1)
 
     print("topology:" + str(parameters["topology"]))
 
@@ -65,9 +64,9 @@ def restore_gt_mean(n = 1000):
     print("test accuracy:    " + str(acc*100) + "%")
 
 
-# train_gt_mean()
+train_gt_mean()
 
-restore_gt_mean()
+# restore_gt_mean()
 
 
 
