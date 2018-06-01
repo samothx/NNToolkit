@@ -34,7 +34,8 @@ This is work in progress. So far the network supports the following features:
 . supports activation functions ReLU, Tanh, Sigmoid
 - Free choice of topography
 - Various hyper parameters.
-- Adaptive learn rate 
+- Adaptive learn rate
+- Function to shuffle and split input into train,cross validation and test set 
 - Basic built in gradient descent
 - Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
 - Save/load network parameters to/from file
@@ -51,7 +52,10 @@ I will update this project while the courses I am hearing progress and add more 
 
 ## Example Code
 
-Samples are in the sample sub directory
+Samples are in the sample sub directory. The handwriting example uses input data from a previous course. 
+I am not sure about copyright copyright on that data, so I have not checked it in, sorry. I will try to find out if I can do so. 
+
+Send me a message for working parameter sets.   
 
 ## Test Cases
 Current test cases are rather simple self-generated input. I have managed to get the network to learn the 

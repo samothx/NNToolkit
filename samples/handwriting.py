@@ -60,5 +60,3 @@ params = init_hand_writing()
 network = learn(params)
 network.get_weights(params)
 save_params(params,"../testCases/handWr_1000_t_92.json.gz")
-
-
