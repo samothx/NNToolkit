@@ -1,4 +1,7 @@
 import numpy as np
+import scipy.io
+
+
 # import pickle
 import json
 import gzip
@@ -119,3 +122,6 @@ def read_params(filename,zip = True):
     # print("out:" + str(out))
     return out
 
+
+def read_matlab_file(filename):
+    return scipy.io.loadmat(filename)
