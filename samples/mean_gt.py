@@ -15,12 +15,12 @@ def init_mean_gt(m = 1000):
     size = 5
 
     parameters = {"alpha": 0.03,
-                  "alpha_min": 0.01,
+                  "alpha_min": 0.005,
                   "verbose": 0,
-                  "iterations": 8000,
+                  "iterations": 10000,
                   "epsilon": 0.005,
-                  "topology": [size, size, 1],
-                  "activations": [act.TanH,act.Sigmoid]  # [act.TanH, act.Sigmoid]
+                  "topology": [size,size, 1],
+                  "activations": [act.ReLU,act.Sigmoid]  # [act.TanH, act.Sigmoid]
                   }
 
 #    width = size - 1

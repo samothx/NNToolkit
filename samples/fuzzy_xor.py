@@ -38,7 +38,7 @@ def init_xor(m = 100):
       "activations" : [act.TanH,act.Sigmoid],
     }
 
-    width = size + 1
+    width = size
     while width > 1:
         for i in range(0,2):
             parameters["topology"].append(width)
