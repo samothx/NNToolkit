@@ -121,7 +121,3 @@ def read_params(filename,zip = True):
             out[key] = value
     # print("out:" + str(out))
     return out
-
-
-def read_matlab_file(filename):
-    return scipy.io.loadmat(filename)

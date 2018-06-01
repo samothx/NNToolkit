@@ -1,13 +1,13 @@
 import numpy as np
 import NNToolkit.activation as act
-from NNToolkit.util import read_matlab_file
+import scipy.io
 from NNToolkit.manage import learn
 
 def init_hand_writing():
-    matrix = read_matlab_file("../data/mlnn.mat")
-    # assert isinstance(matrix, np.ndarray)
+    matrix = scipy.io.loadmat("../data/mlnn.mat")
     assert isinstance(matrix["X"],np.ndarray)
     assert isinstance(matrix["y"], np.ndarray)
+
     x = matrix["X"].T
     y = matrix["y"].T
 
@@ -25,7 +25,7 @@ def init_hand_writing():
     parameters = {"alpha": 0.03,
                   "alpha_min": 0.005,
                   "verbose": 0,
-                  "iterations": 3000,
+                  "iterations": 100,
                   "epsilon": 0.01,
                   "topology": [n_0,int(3 * n_0 / 4),int(n_0/2), n_l],
                   "activations": [act.ReLU,act.Sigmoid],  # [act.TanH, act.Sigmoid]
