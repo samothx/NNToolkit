@@ -100,7 +100,10 @@ def evaluate(network, x, y = None):
     res = network.process(x,{})
     acc = None
     if y is not None:
-        err = res["Y_hat"] - y
+        # print("y hat dim:" + str(res["Y_hat"].shape)  + " yhat:" + str(res["Y_hat"]))
+        # print("y dim:" + str(y.shape) + " y:" + str(y))
+        err = np.linalg.norm(res["Y_hat"] - y,axis=0,keepdims=True)
+        # print("err dim:" + str(err.shape) + " err:" + str(err))
         acc = (1 - np.squeeze(np.dot(err, err.T)) / y.shape[1])
 
     return res["Y_hat"],acc
@@ -152,7 +155,8 @@ def learn(parameters):
     y_hat, acc = evaluate(network,x,parameters["Y"])
     print("training accuracy:" + str(acc*100) + "%")
 
-    y_hat, acc = evaluate(network,parameters["X_t"],parameters["Y_t"])
-    print("test accuracy:    " + str(acc*100) + "%")
+    if "X_t" in parameters:
+        y_hat, acc = evaluate(network,parameters["X_t"],parameters["Y_t"])
+        print("test accuracy:    " + str(acc*100) + "%")
 
     return network

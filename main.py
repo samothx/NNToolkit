@@ -1,12 +1,11 @@
-from NNToolkit.readmatlib import MatlibFile
-# from NNToolkit.manage import read_params
+
+import numpy as np
+from NNToolkit.util import print_matrix
 
 # TODO: input normalization
 # TODO: learn to plot functions
 
 
-file = MatlibFile("data/mlnn.mat")
-file.read()
-
-
+x = np.random.randn(40,40)
+print("x:",print_matrix(x,3))
 

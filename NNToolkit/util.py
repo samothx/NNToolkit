@@ -33,18 +33,56 @@ def adapt_lr(alpha_max, alpha_min, i_max, i_curr):
 # line break after each row,
 # padded with padding + 1 spaces starting with the second row
 def print_matrix(matrix,padding = 0):
+    # TODO: solution for big matrices
     n = matrix.shape[0]
     m = matrix.shape[1]
     pad = ' '*(padding + 1);
 
+    if n < 30:
+        n_0 = n
+        n_1 = 0
+    else:
+        n_0 = 10
+        n_1 = n-10
+
+    if m < 30:
+        m_0 = m
+        m_1 = 0
+    else:
+        m_0 = 5
+        m_1 = m - 5
+
     res = '['
-    for i in range(0, n):
+    for i in range(0, n_0):
         if i > 0:
             res += ",\n" + pad
         res += "["
-        for j in range(0, m):
+        for j in range(0, m_0):
             res = res + "{:10.5f}".format(float(matrix[i, j])) + ' '
+        if m_1:
+            res += ",...,"
+            for j in range(m_1,m):
+                res = res + "{:10.5f}".format(float(matrix[i, j])) + ' '
+
         res += "]"
+
+    if n_1:
+        res += ",\n" + pad + " ... not displaying " + str(n_1-n_0) + " lines"
+        for i in range(n_1,n):
+            if i > n_1:
+                res += "\n" + pad + "["
+            else:
+                res += ",\n" + pad + "["
+            for j in range(0, m_0):
+                res = res + "{:10.5f}".format(float(matrix[i, j])) + ' '
+
+            if m_1:
+                res += ",...,"
+                for j in range(m_1, m):
+                    res = res + "{:10.5f}".format(float(matrix[i, j])) + ' '
+
+            res += "]"
+
     res += "]"
     return res
 
@@ -162,8 +200,8 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
             x_work = work[:,0:n].T
             y_work = work[:,n:n+n_y].T
         else:
-            x_work = x
-            y_work = y
+            x_work = x.T
+            y_work = y.T
 
     # print("x_work:" + print_matrix(x_work,7))
     # print("y_work:" + print_matrix(y_work,7))
