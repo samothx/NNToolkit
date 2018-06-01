@@ -11,13 +11,9 @@ def init_hand_writing():
     assert isinstance(matrix["y"], np.ndarray)
     x_raw = matrix["X"]
     y_raw = matrix["y"]
-    print("x shape:" + str(x_raw.shape))
-    print("y shape:" + str(y_raw.shape))
-    work = np.zeros((x_raw.shape[0],x_raw.shape[1] + 1))
-    print("work shape:" + str(work.shape))
-    work[:, 0:x_raw.shape[1]] = x_raw
-    work[:,x_raw.shape[1]] = y_raw
-    np.random.shuffle(work)
+
+    res = divide2sets(x_raw,y_raw,0.01,0.01,True,True)
+
 
 
 
@@ -62,12 +58,14 @@ for i in range(0,x.shape[1]):
         val += 1
 
 
-y = np.sum(x,axis=0,keepdims=True)
+y = np.zeros((2,x.shape[1]))
+y[0,:] = np.sum(x,axis=0,keepdims=True)
+y[1,:] = np.mean(x,axis=0,keepdims=True)
 
 print("x:      " + print_matrix(x,8))
 print("y:      " + print_matrix(y,8))
 
-res = divide2sets(x,y,0.3,0.1,True)
+res = divide2sets(x.T,y.T,0.3,0.1,True,True)
 
 if "X_train" in res:
     print("x_train:" + print_matrix(res["X_train"],8))

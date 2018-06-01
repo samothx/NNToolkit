@@ -134,17 +134,18 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
         # x/y vectors are column vectors
         m = x.shape[1]
         n = x.shape[0]
+        n_y = y.shape[0]
 
         # print("m,n:(" + str(m) + "," + str(n) + ")")
         # print("shape x:" + str(x.shape))
         if shuffle:
-            work = np.zeros((m,n+1))
+            work = np.zeros((m,n+n_y))
             work[:,0:n] = x.T
-            work[:,n:n+1] = y.T
+            work[:,n:n+n_y] = y.T
             # print("work:  " + print_matrix(work,7))
             np.random.shuffle(work)
             x_work = work[:,0:n].T
-            y_work = work[:,n:n+1].T
+            y_work = work[:,n:n+n_y].T
         else:
             x_work = x
             y_work = y
@@ -152,13 +153,14 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
         # x/y vectors are row vectors
         m = x.shape[0]
         n = x.shape[1]
+        n_y = y.shape[1]
         if shuffle:
-            work = np.zeros((m,n+1))
+            work = np.zeros((m,n+n_y))
             work[:,0:n] = x
-            work[:,n:n+1] = y
+            work[:,n:n+n_y] = y
             np.random.shuffle(work)
             x_work = work[:,0:n].T
-            y_work = work[:,n:n+1].T
+            y_work = work[:,n:n+n_y].T
         else:
             x_work = x
             y_work = y
