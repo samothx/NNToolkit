@@ -121,3 +121,101 @@ def read_params(filename,zip = True):
             out[key] = value
     # print("out:" + str(out))
     return out
+
+
+def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
+
+    assert (cv_frac < 1) & (test_frac < 1) & ((cv_frac + test_frac) < 1)
+
+    # print("x:     " + print_matrix(x,7))
+    # print("y:     " + print_matrix(y,7))
+
+    if not transposed:
+        # x/y vectors are column vectors
+        m = x.shape[1]
+        n = x.shape[0]
+
+        # print("m,n:(" + str(m) + "," + str(n) + ")")
+        # print("shape x:" + str(x.shape))
+        if shuffle:
+            work = np.zeros((m,n+1))
+            work[:,0:n] = x.T
+            work[:,n:n+1] = y.T
+            # print("work:  " + print_matrix(work,7))
+            np.random.shuffle(work)
+            x_work = work[:,0:n].T
+            y_work = work[:,n:n+1].T
+        else:
+            x_work = x
+            y_work = y
+    else:
+        # x/y vectors are row vectors
+        m = x.shape[0]
+        n = x.shape[1]
+        if shuffle:
+            work = np.zeros((m,n+1))
+            work[:,0:n] = x
+            work[:,n:n+1] = y
+            np.random.shuffle(work)
+            x_work = work[:,0:n].T
+            y_work = work[:,n:n+1].T
+        else:
+            x_work = x
+            y_work = y
+
+    # print("x_work:" + print_matrix(x_work,7))
+    # print("y_work:" + print_matrix(y_work,7))
+
+    train_frac = 1 - cv_frac - test_frac
+    train_size = int(m * train_frac)
+
+    start = 0
+    end = train_size
+    x_train = x_work[:, start:end]
+    y_train = y_work[:, start:end]
+
+
+    start = end
+
+    if cv_frac:
+        size = int(m * cv_frac)
+        if (size == 0) & (train_size < m):
+            size = 1
+        end = start + size
+        x_cv = x_work[:,start:end]
+        y_cv = y_work[:,start:end]
+        start = end
+    else:
+        x_cv = None
+        y_cv = None
+
+    if (test_frac > 0) & (start < m):
+        x_test = x_work[:, start:m]
+        y_test = y_work[:, start:m]
+    else:
+        x_test = None
+        y_test = None
+
+
+    # print("x_train:" + print_matrix(x_train,8))
+    # print("y_train:" + print_matrix(y_train,8))
+
+    # if x_cv is not None:
+    #     print("x_cv:   " + print_matrix(x_cv,8))
+    #     print("y_cv    :" + print_matrix(y_cv,8))
+
+    # if x_test is not None:
+    #     print("x_test:  " + print_matrix(x_test,8))
+    #     print("y_test:  " + print_matrix(y_test,8))
+
+    res = { "X_train" : x_train, "Y_train" : y_train }
+
+    if x_cv is not None:
+        res["X_cv"] = x_cv
+        res["Y_cv"] = y_cv
+
+    if x_test is not None:
+        res["X_test"] = x_test
+        res["Y_test"] = y_test
+
+    return res
