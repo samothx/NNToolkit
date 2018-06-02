@@ -68,7 +68,7 @@ def init_hand_writing():
 params = init_hand_writing()
 network = learn(params)
 network.get_weights(params)
-ts = "{:%Y%m%d%H%M%S}".format(datetime.datetime.now())
+ts = "{:%Y%m%d%_H%M%S}".format(datetime.datetime.now())
 if "X_t" in params:
     y_hat,acc = evaluate(network,params["X_t"],params["Y_t"])
     acc_tag = "_" + "{:02d}".format(int(acc * 100))
