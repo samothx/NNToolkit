@@ -13,6 +13,7 @@ default_params = {
       "local_params": True,     # initialize & cache W,b in layer
       "alpha": 0.01,            # learning rate alpha - also triggers update of W,b in layers
       "alpha_min": 0.01,        # when < alpha triggers adaptive learn rate
+      "lambda": 0.1,           # regularization parameter
       "verbose": 0,             # levels of verbsity 0-3
       "iterations": 3000,       # how many iterations of grdient descent
       "epsilon": 0.01,          # min/max element size for initialization of W
@@ -156,6 +157,11 @@ def learn(parameters):
 
     params = {"Y": y, "backprop": True, "alpha": alpha}
 
+    if "lambda" in parameters:
+        lambd = parameters["lambda"]
+        if lambd:
+            params["lambda"] = lambd
+
     if verbose > 2:
         params["verbose"] = True
 
@@ -195,12 +201,12 @@ def learn(parameters):
             if y_t is not None:
                 y_hat, err_t = evaluate(network, x_t, y_t)
                 graph_e_t.append(err_t)
-                err_str = " test err:" + "{:4.2f}".format(err_t * 100) + "%"
+                err_str = " test err:" + "{:5.2f}".format(err_t * 100) + "%"
             else:
                 err_str = ''
 
             print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) + " {:5d}".format(i) +
-                  " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:4.2f}".format(err*100) + "%" + err_str)
+                  " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:5.2f}".format(err*100) + "%" + err_str)
 
         if verbose > 0:
             # TODO: cleanup

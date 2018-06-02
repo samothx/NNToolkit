@@ -44,9 +44,10 @@ def init_hand_writing():
 
     parameters = {"alpha": 0.5,
                   "alpha_min": 0.02,
+                  "epsilon": 0.01,
+                  "lambda": 0.01,
                   "verbose": 0,
                   "iterations": 1500,
-                  "epsilon": 0.01,
                   "graph" : True,
                   "topology": [n_0,300,200, n_l],
                   "activations": [act.ReLU,act.Sigmoid],  # [act.TanH, act.Sigmoid]
@@ -69,7 +70,7 @@ def init_hand_writing():
 params = init_hand_writing()
 network = learn(params)
 network.get_weights(params)
-ts = "{:%Y%m%d%_H%M%S}".format(datetime.datetime.now())
+ts = "{:%Y%m%d-%H%M%S}".format(datetime.datetime.now())
 if "X_t" in params:
     y_hat,acc = evaluate(network,params["X_t"],params["Y_t"])
     acc_tag = "_" + "{:02d}".format(int(acc * 100))

@@ -23,15 +23,14 @@ class Layer:
 
             if "local_params" in params:
                 self.__local_params = params["local_params"]
+                if "W" in params:
+                    self.__W = params["W"]
+
+                if "b" in params:
+                    self.__b = params["b"]
 
             if "epsilon" in params:
                 self.__epsilon = params["epsilon"]
-
-            if "W" in params:
-                self.__W = params["W"]
-
-            if "b" in params:
-                self.__b = params["b"]
 
         self.__next_layer = None             # the next layer
         self.__layer_idx = 0                # the index of this layer starting with 0
@@ -109,11 +108,15 @@ class Layer:
             da = res["dA"]
             m = da.shape[1]
             dz = self.__activation.get_grads(z, da)
-            # dW = np.dot(dZ, A_prev.T) / m
-            dw = np.dot(dz, a_in.T)/m
-            # db = np.sum(dZ, axis=1, keepdims=True) / m
+
+            if "lambda" in params:
+                reg = params["lambda"] * np.linalg.norm(w, ord='fro')
+                res["cost"] = res["cost"] + reg / (2 * m)
+                dw = (np.dot(dz, a_in.T) + reg) / m
+            else:
+                dw = np.dot(dz, a_in.T) / m
+
             db = np.sum(dz, axis=1, keepdims=True)/m
-            # dA_prev = np.dot(W.T, dZ)
             res["dA"] = np.dot(w.T, dz)
 
             if "verbose" in params:
@@ -124,12 +127,15 @@ class Layer:
 
             if "alpha" in params:
                 alpha = params["alpha"]
+                w = w - alpha * dw
+                b = b - alpha * db
+
                 if self.__local_params:
-                    self.__W = w - alpha * dw
-                    self.__b = b - alpha * db
+                    self.__W = w
+                    self.__b = b
                 else:
-                    res["W" + str(self.__layer_idx)] = w - alpha * dw
-                    res["b" + str(self.__layer_idx)] = b - alpha * db
+                    res["W" + str(self.__layer_idx)] = w
+                    res["b" + str(self.__layer_idx)] = b
         return res
 
     def size(self):

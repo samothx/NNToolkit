@@ -34,7 +34,8 @@ This is work in progress. So far the network supports the following features:
 . supports activation functions ReLU, Tanh, Sigmoid
 - Free choice of topography
 - Various hyper parameters.
-- Adaptive learn rate
+- L2 regularization.
+- Adaptive learn rate.
 - Function to shuffle and split input into train,cross validation and test set 
 - Basic built in gradient descent
 - Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
@@ -44,7 +45,6 @@ This is work in progress. So far the network supports the following features:
 ## Todos
 Soon to be added missing Features are:
 - Support for normalization of input
-- Regularization
 - Support for more activation functions
 - Support for linear regression Problems
  
