@@ -69,7 +69,6 @@ class Layer:
             assert self.__W.shape == (self.__size, self.__prev_size)
         self.__next_layer.check_ready()
 
-
     # this is forward and backward propagation
     # back propagation after recursive call to process
     def process(self, a_in, params):

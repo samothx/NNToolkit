@@ -28,17 +28,16 @@ default_params = {
 
 
 def create(parameters):
-    def make_activations(first, last, layers):
+    def make_activations(first, last, count):
         print("make_activations")
-        if layers > 2:
+        if count > 2:
             act_list = []
-            for i in range(1, layers - 1):
+            for idx in range(1, count - 1):
                 act_list.append(first)
             act_list.append(last)
             return act_list
         else:
             return [last]
-
 
     assert "topology" in parameters
     layer_sizes = parameters["topology"]
@@ -53,7 +52,7 @@ def create(parameters):
     else:
         activations = parameters["activations"]
         if len(activations) < (layers - 1):
-            activations = make_activations(activations[0], activations[1],layers)
+            activations = make_activations(activations[0], activations[1], layers)
 
     print("after layers:" + str(layers) + " activations:" + str(activations))
 
@@ -67,10 +66,10 @@ def create(parameters):
     else:
         local_params = parameters["local_params"]
 
-    def_layer_params = { "epsilon": epsilon, "local_params": local_params }
+    def_layer_params = {"epsilon": epsilon, "local_params": local_params}
     root = None
 
-    for i in range(0,len(layer_sizes)):
+    for i in range(0, len(layer_sizes)):
         layer_params = def_layer_params
         layer_params["size"] = layer_sizes[i]
 
@@ -92,30 +91,33 @@ def create(parameters):
     root.add_layer(Terminal())
     return root
 
-def fromParamFile(filename,zip = True):
-    parameters = read_params(filename,zip)
+
+def from_param_file(filename, zipped=True):
+    parameters = read_params(filename, zipped)
     return create(parameters)
+
 
 def get_error(y_hat, y):
     # TODO: different strategies for classification vs regression
     # this is for classification
     # max will be 1 if different else 0 no need for square error
     # as there are only ones involved
-    return np.sum(np.max(y_hat != y,axis=0)) / y.shape[1]
+    return np.sum(np.max(y_hat != y, axis=0)) / y.shape[1]
 
     # err = np.linalg.norm(y_hat - y, 2, axis=0,keepdims=True)
     # err = np.zeros((1,y_hat.shape[1]))
     # err[np.where(y != y_hat)] = 1
     # return np.squeeze(np.dot(err, err.T)) / y.shape[1]
 
+
 def evaluate(network, x, y=None):
     # print("network:\n" + str(network) + "\n")
-    res = network.process(x,{})
+    res = network.process(x, {})
     err = None
     if y is not None:
         err = get_error(res["Y_hat"], y)
 
-    return res["Y_hat"],err
+    return res["Y_hat"], err
 
 
 def learn(parameters):
@@ -130,17 +132,17 @@ def learn(parameters):
     iterations = parameters["iterations"]
 
     graph = False
-    if ("graph" in parameters):
+    graph_x = []
+    graph_j = []
+    graph_e = []
+    graph_e_t = []
+
+    if "graph" in parameters:
         graph = parameters["graph"]
-        if graph:
-            graph_x = []
-            graph_j = []
-            graph_e = []
-            graph_e_t = []
 
     if parameters["verbose"] > 0:
-        print("X:    " + print_matrix(parameters["X"],6))
-        print("Y:    " + print_matrix(parameters["Y"],6))
+        print("X:    " + print_matrix(parameters["X"], 6))
+        print("Y:    " + print_matrix(parameters["Y"], 6))
 
     alpha_min = -1
     alpha = 0
@@ -152,21 +154,21 @@ def learn(parameters):
             if alpha_min >= alpha:
                 alpha_min = -1
 
-    params = {"Y": y, "backprop": True, "alpha": alpha }
+    params = {"Y": y, "backprop": True, "alpha": alpha}
 
     if verbose > 2:
         params["verbose"] = True
 
-    if ("X_t" in parameters) & ("Y_t" in parameters) :
+    if ("X_t" in parameters) & ("Y_t" in parameters):
         y_t = parameters["Y_t"]
         x_t = parameters["X_t"]
     else:
         y_t = None
         x_t = None
 
-    update_iv = min(max(int(iterations / 100),10),100)
+    update_iv = min(max(int(iterations / 100), 10), 100)
 
-    for i in range(0,iterations):
+    for i in range(0, iterations):
 
         if (i % update_iv) == 0:
             update = True
@@ -178,31 +180,26 @@ def learn(parameters):
         else:
             update = False
 
-
         if (i % (iterations / 10)) == 0:
-            by_ten = True
-
             if verbose > 1:
                 params["verbose"] = True
                 print("iteration: " + str(i))
-        else:
-            by_ten = False
 
         res = network.process(x, params)
 
         if update & graph:
-            err = get_error(res["Y_hat"],y)
+            err = get_error(res["Y_hat"], y)
             graph_x.append(i)
             graph_j.append(res["cost"])
             graph_e.append(err)
             if y_t is not None:
-                y_hat, err_t = evaluate(network,x_t,y_t)
+                y_hat, err_t = evaluate(network, x_t, y_t)
                 graph_e_t.append(err_t)
                 err_str = " test err:" + "{:4.2f}".format(err_t * 100) + "%"
             else:
                 err_str = ''
 
-            print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) +  " {:5d}".format(i) +
+            print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) + " {:5d}".format(i) +
                   " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:4.2f}".format(err*100) + "%" + err_str)
 
         if verbose > 0:
@@ -218,28 +215,27 @@ def learn(parameters):
                     print("***********************************************")
 
     if graph:
-        plt.subplot(2,1,1)
-        plt.plot(graph_x,graph_j,label='Cost')
-        plt.subplot(2,1,2)
-        plt.plot(graph_x, graph_e,label='Train Error')
+        plt.subplot(2, 1, 1)
+        plt.plot(graph_x, graph_j, label='Cost')
+        plt.subplot(2, 1, 2)
+        plt.plot(graph_x, graph_e, label='Train Error')
         if len(graph_e_t):
-            plt.plot(graph_x, graph_e_t,label='Test Error')
+            plt.plot(graph_x, graph_e_t, label='Test Error')
         plt.show()
-
 
     if verbose >= 1:
         params["verbose"] = True
+
     res = network.process(x, params)
+
     if "cost" in res:
         print("last -  cost:" + str(res["cost"]))
 
-    y_hat, acc = evaluate(network,x,parameters["Y"])
+    y_hat, acc = evaluate(network, x, parameters["Y"])
     print("training error:" + "{:2.2f}".format(acc*100) + "%")
 
     if "X_t" in parameters:
-        y_hat, acc = evaluate(network,parameters["X_t"],parameters["Y_t"])
+        y_hat, acc = evaluate(network, parameters["X_t"], parameters["Y_t"])
         print("test error:    " + "{:2.2f}".format(acc*100) + "%")
-
-
 
     return network

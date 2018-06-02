@@ -1,8 +1,4 @@
 import numpy as np
-import scipy.io
-
-
-# import pickle
 import json
 import gzip
 import re
@@ -21,6 +17,7 @@ import re
 # cache values of b for tuples (alpha_max, alpha_min, i_max)
 alpha_params = {}
 
+
 def adapt_lr(alpha_max, alpha_min, i_max, i_curr):
     if (alpha_max, alpha_min, i_max) in alpha_params:
         b = alpha_params[(alpha_max, alpha_min, i_max)]
@@ -32,11 +29,11 @@ def adapt_lr(alpha_max, alpha_min, i_max, i_curr):
 # print a matrix to a string
 # line break after each row,
 # padded with padding + 1 spaces starting with the second row
-def print_matrix(matrix,padding = 0):
+def print_matrix(matrix, padding=0):
     # TODO: solution for big matrices
     n = matrix.shape[0]
     m = matrix.shape[1]
-    pad = ' '*(padding + 1);
+    pad = ' '*(padding + 1)
 
     if n < 30:
         n_0 = n
@@ -61,14 +58,14 @@ def print_matrix(matrix,padding = 0):
             res = res + "{:10.5f}".format(float(matrix[i, j])) + ' '
         if m_1:
             res += ",...,"
-            for j in range(m_1,m):
+            for j in range(m_1, m):
                 res = res + "{:10.5f}".format(float(matrix[i, j])) + ' '
 
         res += "]"
 
     if n_1:
         res += ",\n" + pad + " ... not displaying " + str(n_1-n_0) + " lines"
-        for i in range(n_1,n):
+        for i in range(n_1, n):
             if i > n_1:
                 res += "\n" + pad + "["
             else:
@@ -88,8 +85,9 @@ def print_matrix(matrix,padding = 0):
 
 # save parameters to json file / gzipped json file
 
-def save_params(parameters, filename, zip=True):
-    out = { "np_ndarrays" : [] }
+
+def save_params(parameters, filename, zipped=True):
+    out = {"np_ndarrays": []}
     for key in parameters:
         value = parameters[key]
         if key == "activations":
@@ -106,7 +104,7 @@ def save_params(parameters, filename, zip=True):
 
     dump = json.dumps(out)
 
-    if zip is True:
+    if zipped is True:
         with gzip.open(filename, 'wb') as f:
             f.write(dump.encode('utf-8'))
     else:
@@ -114,19 +112,19 @@ def save_params(parameters, filename, zip=True):
         f.write(dump)
         f.close()
 
-# recover parameters from json file / gzipped json file
 
-def read_params(filename,zip = True):
-    def import_class(name):
-        components = name.split('.')
+def read_params(filename, zipped=True):
+    # recover parameters from json file / gzipped json file
+
+    def import_class(cname):
+        components = cname.split('.')
         mod = __import__(components[0])
         for comp in components[1:]:
             mod = getattr(mod, comp)
         return mod
 
-    data = ''
-    if zip is True:
-        with gzip.open(filename,"rb") as f:
+    if zipped is True:
+        with gzip.open(filename, "rb") as f:
             data = json.loads(f.read().decode("utf-8"))
     else:
         f = open(filename, "r")
@@ -161,7 +159,7 @@ def read_params(filename,zip = True):
     return out
 
 
-def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
+def divide2sets(x, y, cv_frac, test_frac, shuffle=False, transposed=False):
 
     assert (cv_frac < 1) & (test_frac < 1) & ((cv_frac + test_frac) < 1)
 
@@ -177,13 +175,13 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
         # print("m,n:(" + str(m) + "," + str(n) + ")")
         # print("shape x:" + str(x.shape))
         if shuffle:
-            work = np.zeros((m,n+n_y))
-            work[:,0:n] = x.T
-            work[:,n:n+n_y] = y.T
+            work = np.zeros((m, n + n_y))
+            work[:, 0:n] = x.T
+            work[:, n:n + n_y] = y.T
             # print("work:  " + print_matrix(work,7))
             np.random.shuffle(work)
-            x_work = work[:,0:n].T
-            y_work = work[:,n:n+n_y].T
+            x_work = work[:, 0:n].T
+            y_work = work[:, n:n + n_y].T
         else:
             x_work = x
             y_work = y
@@ -193,12 +191,12 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
         n = x.shape[1]
         n_y = y.shape[1]
         if shuffle:
-            work = np.zeros((m,n+n_y))
-            work[:,0:n] = x
-            work[:,n:n+n_y] = y
+            work = np.zeros((m, n + n_y))
+            work[:, 0:n] = x
+            work[:, n:n + n_y] = y
             np.random.shuffle(work)
-            x_work = work[:,0:n].T
-            y_work = work[:,n:n+n_y].T
+            x_work = work[:, 0:n].T
+            y_work = work[:, n:n + n_y].T
         else:
             x_work = x.T
             y_work = y.T
@@ -214,7 +212,6 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
     x_train = x_work[:, start:end]
     y_train = y_work[:, start:end]
 
-
     start = end
 
     if cv_frac:
@@ -222,8 +219,8 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
         if (size == 0) & (train_size < m):
             size = 1
         end = start + size
-        x_cv = x_work[:,start:end]
-        y_cv = y_work[:,start:end]
+        x_cv = x_work[:, start:end]
+        y_cv = y_work[:, start:end]
         start = end
     else:
         x_cv = None
@@ -236,7 +233,6 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
         x_test = None
         y_test = None
 
-
     # print("x_train:" + print_matrix(x_train,8))
     # print("y_train:" + print_matrix(y_train,8))
 
@@ -248,7 +244,7 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle = False,transposed = False):
     #     print("x_test:  " + print_matrix(x_test,8))
     #     print("y_test:  " + print_matrix(y_test,8))
 
-    res = { "X_train" : x_train, "Y_train" : y_train }
+    res = {"X_train": x_train, "Y_train": y_train}
 
     if x_cv is not None:
         res["X_cv"] = x_cv
