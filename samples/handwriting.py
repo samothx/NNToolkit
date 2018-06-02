@@ -1,10 +1,21 @@
+import sys
+sys.path.append('../')
+import datetime
 import numpy as np
 import NNToolkit.activation as act
 from NNToolkit.util import divide2sets
-from NNToolkit.util import print_matrix
 from NNToolkit.util import save_params
 import scipy.io
 from NNToolkit.manage import learn
+from NNToolkit.manage import evaluate
+
+# best set
+# 400,300,200.10
+# alpha 0.5
+# alpha_min 0.05
+# epsilon 0.01
+# relu,sigmoid
+# 92  / 82 % @ 1000
 
 def init_hand_writing():
     matrix = scipy.io.loadmat("../data/mlnn.mat")
@@ -27,8 +38,6 @@ def init_hand_writing():
     for i in range(0,n_l):
         y_class[:,i:i+1] = (y_raw == (i + 1))
 
-
-
     res = divide2sets(x_raw,y_class,0,0.01,True,True)
 
     print("shape: n0:" + str(n_0) + " nL:" + str(n_l) + " m:" + str(m))
@@ -36,9 +45,9 @@ def init_hand_writing():
     parameters = {"alpha": 0.5,
                   "alpha_min": 0.05,
                   "verbose": 0,
-                  "iterations": 1000,
+                  "iterations": 1200,
                   "epsilon": 0.01,
-                  "topology": [n_0,int(3 * n_0 / 4),int(n_0/2), n_l],
+                  "topology": [n_0,300,200, n_l],
                   "activations": [act.ReLU,act.Sigmoid],  # [act.TanH, act.Sigmoid]
                   "X" : res["X_train"],
                   "Y" : res["Y_train"]
@@ -59,4 +68,11 @@ def init_hand_writing():
 params = init_hand_writing()
 network = learn(params)
 network.get_weights(params)
-save_params(params,"../testCases/handWr_1000_t_92.json.gz")
+ts = "{:%Y%m%d%H%M%S}".format(datetime.datetime.now())
+if "X_t" in params:
+    y_hat,acc = evaluate(network,params["X_t"],params["Y_t"])
+    acc_tag = "_" + "{:02d}".format(int(acc * 100))
+else:
+    acc_tag = ""
+
+save_params(params,"../testCases/handWr_1000_t_92_" + ts + acc_tag + ".json.gz")

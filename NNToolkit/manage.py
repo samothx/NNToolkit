@@ -110,6 +110,7 @@ def evaluate(network, x, y = None):
 
 
 def learn(parameters):
+    # TODO: timestamps on output
     network = create(parameters)
     print("network:\n" + str(network) + "\n")
 
