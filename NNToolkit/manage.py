@@ -1,5 +1,6 @@
-import numpy as np
 import datetime
+import numpy as np
+import matplotlib.pyplot as plt
 import NNToolkit.activation as act
 
 from NNToolkit.terminal import Terminal
@@ -95,18 +96,26 @@ def fromParamFile(filename,zip = True):
     parameters = read_params(filename,zip)
     return create(parameters)
 
-def get_error(y_hat,y):
-    err = np.linalg.norm(y_hat - y, axis=0, keepdims=True)
-    return np.squeeze(np.dot(err, err.T)) / y.shape[1]
+def get_error(y_hat, y):
+    # TODO: different strategies for classification vs regression
+    # this is for classification
+    # max will be 1 if different else 0 no need for square error
+    # as there are only ones involved
+    return np.sum(np.max(y_hat != y,axis=0)) / y.shape[1]
 
-def evaluate(network, x, y = None):
+    # err = np.linalg.norm(y_hat - y, 2, axis=0,keepdims=True)
+    # err = np.zeros((1,y_hat.shape[1]))
+    # err[np.where(y != y_hat)] = 1
+    # return np.squeeze(np.dot(err, err.T)) / y.shape[1]
+
+def evaluate(network, x, y=None):
     # print("network:\n" + str(network) + "\n")
     res = network.process(x,{})
-    acc = None
+    err = None
     if y is not None:
-        acc = 1 - get_error(res["Y_hat"], y)
+        err = get_error(res["Y_hat"], y)
 
-    return res["Y_hat"],acc
+    return res["Y_hat"],err
 
 
 def learn(parameters):
@@ -127,6 +136,7 @@ def learn(parameters):
             graph_x = []
             graph_j = []
             graph_e = []
+            graph_e_t = []
 
     if parameters["verbose"] > 0:
         print("X:    " + print_matrix(parameters["X"],6))
@@ -147,40 +157,58 @@ def learn(parameters):
     if verbose > 2:
         params["verbose"] = True
 
+    if ("X_t" in parameters) & ("Y_t" in parameters) :
+        y_t = parameters["Y_t"]
+        x_t = parameters["X_t"]
+    else:
+        y_t = None
+        x_t = None
+
+    if (iterations / 100) < 100:
+        update_iv = iterations / 100
+    else:
+        update_iv = 100
+
     for i in range(0,iterations):
-        if (i % (iterations / 100)) == 0:
-            by_hundred = True
+
+        if (i % update_iv) == 0:
+            update = True
 
             if (alpha != 0) & (alpha_min > 0):
-                params["alpha"] = adapt_lr(alpha, alpha_min, iterations, i)
-
-            if (i % (iterations / 10)) == 0:
-                by_ten = True
-
-                if verbose > 1:
-                    params["verbose"] = True
-                    print("iteration: " + str(i))
-            else:
-                by_ten = False
+                tmp = adapt_lr(alpha, alpha_min, iterations, i)
+                # print("new learn rate:" + str(tmp))
+                params["alpha"] = tmp
         else:
-            by_hundred = False
+            update = False
+
+
+        if (i % (iterations / 10)) == 0:
+            by_ten = True
+
+            if verbose > 1:
+                params["verbose"] = True
+                print("iteration: " + str(i))
+        else:
             by_ten = False
 
         res = network.process(x, params)
 
         if by_ten:
-            if i > 0:
-                err = get_error(res["Y_hat"],y)
-            else:
-                err = 0
+            # if i > 0:
+            err = get_error(res["Y_hat"],y)
+            # else:
+            #     err = 0
 
             print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) +  " {:5d}".format(i) +
-                  " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:2d}".format(int(err*100)) + "%")
+                  " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:2.2f}".format(err*100) + "%")
 
-        if by_hundred & graph:
+        if update & graph:
             graph_x.append(i)
             graph_j.append(res["cost"])
             graph_e.append(get_error(res["Y_hat"],y))
+            if y_t is not None:
+                y_hat, err = evaluate(network,x_t,y_t)
+                graph_e_t.append(err)
 
 
         if verbose > 0:
@@ -195,6 +223,15 @@ def learn(parameters):
                 if verbose > 1:
                     print("***********************************************")
 
+    if graph:
+        plt.subplot(2,1,1)
+        plt.plot(graph_x,graph_j)
+        plt.subplot(2,1,2)
+        plt.plot(graph_x, graph_e)
+        if len(graph_e_t):
+            plt.plot(graph_x, graph_e_t)
+        plt.show()
+
 
     if verbose >= 1:
         params["verbose"] = True
@@ -203,10 +240,12 @@ def learn(parameters):
         print("last -  cost:" + str(res["cost"]))
 
     y_hat, acc = evaluate(network,x,parameters["Y"])
-    print("training accuracy:" + str(acc*100) + "%")
+    print("training accuracy:" + "{:2.2f}".format(acc*100) + "%")
 
     if "X_t" in parameters:
         y_hat, acc = evaluate(network,parameters["X_t"],parameters["Y_t"])
-        print("test accuracy:    " + str(acc*100) + "%")
+        print("test accuracy:    " + "{:2.2f}".format(acc*100) + "%")
+
+
 
     return network

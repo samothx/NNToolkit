@@ -14,8 +14,12 @@ class Terminal(Layer):
         return True
 
     def process(self,a,params):
+        y_hat = np.zeros(a.shape)
+        y_hat[np.where(a == np.max(a, axis=0))] = 1
+        res = { "Y_hat" : y_hat }
+        # a.argmax(axis=0)
+        # y_hat = np.zeros(a.shape)
 
-        res = { "Y_hat" : (a > 0.5) * 1 }
         cost = 0
         if "Y" in params:
             y = params["Y"]
