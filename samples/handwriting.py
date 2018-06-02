@@ -42,10 +42,10 @@ def init_hand_writing():
 
     print("shape: n0:" + str(n_0) + " nL:" + str(n_l) + " m:" + str(m))
 
-    parameters = {"alpha": 0.2,
-                  "alpha_min": 0.05,
+    parameters = {"alpha": 0.5,
+                  "alpha_min": 0.02,
                   "verbose": 0,
-                  "iterations": 500,
+                  "iterations": 1500,
                   "epsilon": 0.01,
                   "graph" : True,
                   "topology": [n_0,300,200, n_l],

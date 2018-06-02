@@ -28,11 +28,11 @@ default_params = {
 
 
 def create(parameters):
-    def make_activations(first,last,layers):
+    def make_activations(first, last, layers):
         print("make_activations")
         if layers > 2:
             act_list = []
-            for i in range(1,layers - 1):
+            for i in range(1, layers - 1):
                 act_list.append(first)
             act_list.append(last)
             return act_list
@@ -49,11 +49,11 @@ def create(parameters):
 
     print("before layers:" + str(layers) + " activations:" + str(parameters["activations"]))
     if "activations" not in parameters:
-        activations = make_activations(act.TanH,act.Sigmoid,layers)
+        activations = make_activations(act.TanH, act.Sigmoid, layers)
     else:
         activations = parameters["activations"]
         if len(activations) < (layers - 1):
-            activations = make_activations(activations[0],activations[1],layers)
+            activations = make_activations(activations[0], activations[1],layers)
 
     print("after layers:" + str(layers) + " activations:" + str(activations))
 
@@ -164,10 +164,7 @@ def learn(parameters):
         y_t = None
         x_t = None
 
-    if (iterations / 100) < 100:
-        update_iv = iterations / 100
-    else:
-        update_iv = 100
+    update_iv = min(max(int(iterations / 100),10),100)
 
     for i in range(0,iterations):
 
@@ -193,23 +190,20 @@ def learn(parameters):
 
         res = network.process(x, params)
 
-        if by_ten:
-            # if i > 0:
-            err = get_error(res["Y_hat"],y)
-            # else:
-            #     err = 0
-
-            print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) +  " {:5d}".format(i) +
-                  " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:2.2f}".format(err*100) + "%")
-
         if update & graph:
+            err = get_error(res["Y_hat"],y)
             graph_x.append(i)
             graph_j.append(res["cost"])
-            graph_e.append(get_error(res["Y_hat"],y))
+            graph_e.append(err)
             if y_t is not None:
-                y_hat, err = evaluate(network,x_t,y_t)
-                graph_e_t.append(err)
+                y_hat, err_t = evaluate(network,x_t,y_t)
+                graph_e_t.append(err_t)
+                err_str = " test err:" + "{:4.2f}".format(err_t * 100) + "%"
+            else:
+                err_str = ''
 
+            print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) +  " {:5d}".format(i) +
+                  " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:4.2f}".format(err*100) + "%" + err_str)
 
         if verbose > 0:
             # TODO: cleanup
@@ -225,11 +219,11 @@ def learn(parameters):
 
     if graph:
         plt.subplot(2,1,1)
-        plt.plot(graph_x,graph_j)
+        plt.plot(graph_x,graph_j,label='Cost')
         plt.subplot(2,1,2)
-        plt.plot(graph_x, graph_e)
+        plt.plot(graph_x, graph_e,label='Train Error')
         if len(graph_e_t):
-            plt.plot(graph_x, graph_e_t)
+            plt.plot(graph_x, graph_e_t,label='Test Error')
         plt.show()
 
 
@@ -240,11 +234,11 @@ def learn(parameters):
         print("last -  cost:" + str(res["cost"]))
 
     y_hat, acc = evaluate(network,x,parameters["Y"])
-    print("training accuracy:" + "{:2.2f}".format(acc*100) + "%")
+    print("training error:" + "{:2.2f}".format(acc*100) + "%")
 
     if "X_t" in parameters:
         y_hat, acc = evaluate(network,parameters["X_t"],parameters["Y_t"])
-        print("test accuracy:    " + "{:2.2f}".format(acc*100) + "%")
+        print("test error:    " + "{:2.2f}".format(acc*100) + "%")
 
 
 
