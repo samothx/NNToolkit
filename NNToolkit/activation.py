@@ -11,6 +11,10 @@ class Activation:
     def get_grads(self, z, da):
         assert self.__type is not None
 
+    def get_he_init(self, l_prev):
+        print("Default.get_he_init()")
+        return np.sqrt(1 / l_prev)
+
     def __str__(self):
         return self.__type
 
@@ -56,3 +60,7 @@ class ReLU(Activation):
             self.__ones = np.ones(z.shape)
 
         return np.multiply(self.__ones * (z > 0), da)
+
+    def get_he_init(self,l_prev):
+        print("ReLU.get_he_init()")
+        return np.sqrt(2 / l_prev)

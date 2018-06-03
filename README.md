@@ -32,6 +32,7 @@ This is work in progress. So far the network supports the following features:
 - Supervised machine learning
 - Currently supports only classification problems
 . supports activation functions ReLU, Tanh, Sigmoid
+- Automatic weight initialization with he / xavier
 - Free choice of topography
 - Various hyper parameters.
 - L2 regularization.

@@ -18,6 +18,7 @@ from NNToolkit.manage import evaluate
 # 92  / 82 % @ 1000
 
 def init_hand_writing():
+    np.random.seed(1)
     matrix = scipy.io.loadmat("../data/mlnn.mat")
     assert isinstance(matrix["X"],np.ndarray)
     assert isinstance(matrix["y"], np.ndarray)
@@ -44,8 +45,7 @@ def init_hand_writing():
 
     parameters = {"alpha": 0.5,
                   "alpha_min": 0.02,
-                  "epsilon": 0.01,
-                  "lambda": 0.01,
+                  "lambda": 0.02,
                   "verbose": 0,
                   "iterations": 1500,
                   "graph" : True,

@@ -16,7 +16,6 @@ default_params = {
       "lambda": 0.1,           # regularization parameter
       "verbose": 0,             # levels of verbsity 0-3
       "iterations": 3000,       # how many iterations of grdient descent
-      "epsilon": 0.01,          # min/max element size for initialization of W
       "activations": [act.Sigmoid],    # activation function either 2 or one for each layer
       "topology": []            # array of layer sizes
       # "X": [[]]               # training input vectors
@@ -30,7 +29,6 @@ default_params = {
 
 def create(parameters):
     def make_activations(first, last, count):
-        print("make_activations")
         if count > 2:
             act_list = []
             for idx in range(1, count - 1):
@@ -47,7 +45,6 @@ def create(parameters):
 
     # add some defaults for optional parameters
 
-    print("before layers:" + str(layers) + " activations:" + str(parameters["activations"]))
     if "activations" not in parameters:
         activations = make_activations(act.TanH, act.Sigmoid, layers)
     else:
@@ -55,19 +52,12 @@ def create(parameters):
         if len(activations) < (layers - 1):
             activations = make_activations(activations[0], activations[1], layers)
 
-    print("after layers:" + str(layers) + " activations:" + str(activations))
-
-    if "epsilon" not in parameters:
-        epsilon = 0.01
-    else:
-        epsilon = parameters["epsilon"]
-
     if "local_params" not in parameters:
         local_params = True
     else:
         local_params = parameters["local_params"]
 
-    def_layer_params = {"epsilon": epsilon, "local_params": local_params}
+    def_layer_params = { "local_params": local_params}
     root = None
 
     for i in range(0, len(layer_sizes)):

@@ -11,7 +11,6 @@ class Layer:
         self.__local_params = False
         self.__size = 0  # number of input nodes to layer
         self.__activation = None  # type of activation (relu, )
-        self.__epsilon = 0.01  #
 
         if not terminal:
             assert "size" in params
@@ -28,9 +27,6 @@ class Layer:
 
                 if "b" in params:
                     self.__b = params["b"]
-
-            if "epsilon" in params:
-                self.__epsilon = params["epsilon"]
 
         self.__next_layer = None             # the next layer
         self.__layer_idx = 0                # the index of this layer starting with 0
@@ -55,7 +51,7 @@ class Layer:
 
             if self.__local_params:
                 if self.__W is None:  # initialize W
-                    self.__W = np.random.randn(self.__size, prev_size) * self.__epsilon
+                    self.__W = np.random.randn(self.__size, prev_size) * self.__activation.get_he_init(prev_size)
                 if self.__b is None:  # initialize b
                     self.__b = np.zeros((self.__size, 1))
         else:
