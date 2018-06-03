@@ -106,9 +106,9 @@ class Layer:
             dz = self.__activation.get_grads(z, da)
 
             if "lambda" in params:
-                reg = params["lambda"] * np.linalg.norm(w, ord='fro')
-                res["cost"] = res["cost"] + reg / (2 * m)
-                dw = (np.dot(dz, a_in.T) + reg) / m
+                lambd = params["lambda"]
+                res["cost"] = res["cost"] + lambd * np.sum(np.square(w)) / (2 * m)
+                dw = (np.dot(dz, a_in.T) + lambd * w) / m
             else:
                 dw = np.dot(dz, a_in.T) / m
 
