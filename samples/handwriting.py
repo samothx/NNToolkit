@@ -45,7 +45,7 @@ def init_hand_writing():
 
     parameters = {"alpha": 0.5,
                   "alpha_min": 0.02,
-                  "lambda": 0.02,
+                  "lambda": 0.04,
                   "verbose": 0,
                   "iterations": 1500,
                   "graph" : True,
