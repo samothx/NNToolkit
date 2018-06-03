@@ -53,12 +53,7 @@ class ReLU(Activation):
         return np.maximum(0, z)
 
     def get_grads(self, z, da):
-        if self.__ones is None:
-            self.__ones = np.ones(z.shape)
-        elif z.shape != self.__ones.shape:
-            self.__ones = np.ones(z.shape)
-
-        return np.multiply(self.__ones * (z > 0), da)
+        return np.multiply(np.int64(z > 0), da)
 
     def get_he_init(self,l_prev):
         return np.sqrt(2 / l_prev)

@@ -213,10 +213,12 @@ def learn(parameters):
     if graph:
         plt.subplot(2, 1, 1)
         plt.plot(graph_x, graph_j, label='Cost')
+        plt.legend()
         plt.subplot(2, 1, 2)
         plt.plot(graph_x, graph_e, label='Train Error')
         if len(graph_e_t):
             plt.plot(graph_x, graph_e_t, label='Test Error')
+        plt.legend()
         plt.show()
 
     if verbose >= 1:

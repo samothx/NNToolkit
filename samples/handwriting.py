@@ -20,7 +20,7 @@ from NNToolkit.manage import evaluate
 def init_hand_writing():
     np.random.seed(1)
     matrix = scipy.io.loadmat("../data/mlnn.mat")
-    assert isinstance(matrix["X"],np.ndarray)
+    assert isinstance(matrix["X"], np.ndarray)
     assert isinstance(matrix["y"], np.ndarray)
 
     x_raw = matrix["X"]
@@ -35,21 +35,21 @@ def init_hand_writing():
     n_0 = x_raw.shape[1]
     n_l = 10
 
-    y_class = np.zeros((m,n_l))
+    y_class = np.zeros((m, n_l))
     for i in range(0,n_l):
         y_class[:,i:i+1] = (y_raw == (i + 1))
 
-    res = divide2sets(x_raw,y_class,0,0.01,True,True)
+    res = divide2sets(x_raw, y_class, 0, 0.01, True, True)
 
     print("shape: n0:" + str(n_0) + " nL:" + str(n_l) + " m:" + str(m))
 
     parameters = {"alpha": 0.5,
                   "alpha_min": 0.02,
-                  "lambda": 0.04,
+                  "lambda": 0.8,
                   "verbose": 0,
-                  "iterations": 1500,
+                  "iterations": 500,
                   "graph" : True,
-                  "topology": [n_0,300,200, n_l],
+                  "topology": [n_0, 300, 200, 100, n_l],
                   "activations": [act.ReLU,act.Sigmoid],  # [act.TanH, act.Sigmoid]
                   "X" : res["X_train"],
                   "Y" : res["Y_train"]
@@ -72,9 +72,9 @@ network = learn(params)
 network.get_weights(params)
 ts = "{:%Y%m%d-%H%M%S}".format(datetime.datetime.now())
 if "X_t" in params:
-    y_hat,acc = evaluate(network,params["X_t"],params["Y_t"])
+    y_hat,acc = evaluate(network, params["X_t"], params["Y_t"])
     acc_tag = "_" + "{:02d}".format(int(acc * 100))
 else:
     acc_tag = ""
 
-save_params(params,"../testCases/handWr_1000_t_92_" + ts + acc_tag + ".json.gz")
+save_params(params, "../testCases/handWr_1000_t_92_" + ts + acc_tag + ".json.gz")

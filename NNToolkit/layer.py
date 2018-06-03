@@ -113,7 +113,9 @@ class Layer:
                 dw = np.dot(dz, a_in.T) / m
 
             db = np.sum(dz, axis=1, keepdims=True)/m
-            res["dA"] = np.dot(w.T, dz)
+
+            if self.__layer_idx > 1:
+                res["dA"] = np.dot(w.T, dz)
 
             if "verbose" in params:
                 print("dz[" + str(self.__layer_idx) + "]:" + print_matrix(dz, 6))
@@ -126,12 +128,16 @@ class Layer:
                 w = w - alpha * dw
                 b = b - alpha * db
 
-                if self.__local_params:
-                    self.__W = w
-                    self.__b = b
-                else:
-                    res["W" + str(self.__layer_idx)] = w
-                    res["b" + str(self.__layer_idx)] = b
+            if self.__local_params:
+                self.__W = w
+                self.__b = b
+
+            if not self.__local_params | ("dump_params" in params):
+                res["W" + str(self.__layer_idx)] = w
+                res["b" + str(self.__layer_idx)] = b
+                res["dW" + str(self.__layer_idx)] = dw
+                res["db" + str(self.__layer_idx)] = db
+
         return res
 
     def size(self):

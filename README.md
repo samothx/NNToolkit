@@ -41,6 +41,7 @@ This is work in progress. So far the network supports the following features:
 - Basic built in gradient descent
 - Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
 - Save/load network parameters to/from file
+- Plotting of cost function and errors over iterations
 
 
 ## Todos
