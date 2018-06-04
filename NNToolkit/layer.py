@@ -195,7 +195,7 @@ class Terminal(Layer):
 
             if params.is_learn():
                 res.da = -(np.divide(y, a_prev) - np.divide(1 - y, 1 - a_prev))
-                if "verbose" in params:
+                if params.is_verbose():
                     print("Y:    " + print_matrix(y))
                     print("dA[" + str(super().layer_idx() - 1) + "]:" + print_matrix(res.da))
 
