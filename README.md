@@ -1,7 +1,9 @@
 # NNToolkit
 A Neural Network Playground - neural network implementation in python based on numPy.
-The code puts together the learnings from Coursea courses on Machine Learning and Deep Learning (https://www.coursera.org/learn/deep-neural-network).
-It implements a multi-layered neural network and functions to train it or to evaluate it. The main motivation is to get experence with neural networks, their implementation and their optimization. 
+The code puts together the learnings from Coursea courses on Machine Learning and Deep Learning 
+(https://www.coursera.org/learn/deep-neural-network).
+It implements a multi-layered neural network and functions to train it or to evaluate it. The main motivation is to get 
+experience with neural networks, their implementation and their optimization. 
 
 ## Architecture
 I am rather new to python so some of the code might be a little clumsy. 
@@ -51,6 +53,8 @@ Soon to be added missing Features are:
 - Support for normalization of input
 - Support for more activation functions
 - Support for linear regression Problems
+- Support for Momentum and other optimaization techniques for gradient descent.
+- Support for parallel execution of min-batch gradient descent (my very own strategy) 
  
 I will update this project while the courses I am hearing progress and add more advanced features.     
 
