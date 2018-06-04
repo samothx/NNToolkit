@@ -3,6 +3,8 @@ import json
 import gzip
 import re
 
+from NNToolkit.parameters.setup import SetupParams
+
 # parameters:
 # alpha_max:  max learning rate
 # alpha_min:  min learning rate
@@ -87,22 +89,7 @@ def print_matrix(matrix, padding=0):
 
 
 def save_params(parameters, filename, zipped=True):
-    out = {"np_ndarrays": []}
-    for key in parameters:
-        value = parameters[key]
-        if key == "activations":
-            act_names = []
-            for act_obj in value:
-                act_names.append(str(act_obj))
-            # print("act_names" + str(act_names))
-            out["activations"] = act_names
-        elif isinstance(value, np.ndarray):
-            out[key] = value.tolist()
-            out["np_ndarrays"].append(key)
-        else:
-            out[key] = value
-
-    dump = json.dumps(out)
+    dump = json.dumps(parameters)
 
     if zipped is True:
         with gzip.open(filename, 'wb') as f:
@@ -111,7 +98,6 @@ def save_params(parameters, filename, zipped=True):
         f = open(filename, "w")
         f.write(dump)
         f.close()
-
 
 def read_params(filename, zipped=True):
     # recover parameters from json file / gzipped json file
@@ -125,31 +111,7 @@ def read_params(filename, zipped=True):
 
     # print("loaded:\n" + str(data))
 
-    if "np_ndarrays" in data:
-        np_ndarrays = data["np_ndarrays"]
-        del data["np_ndarrays"]
-    else:
-        np_ndarrays = []
-
-    out = {}
-    for key in data:
-        value = data[key]
-        if key == "activations":
-            # sample <class 'NNToolkit.activation.TanH'>
-            pattern = re.compile("^<class '([^']+)'>$")
-            activations = []
-            for act_name in value:
-                match = pattern.fullmatch(act_name)
-                assert match is not None
-                name = match.group(1)
-                activations.append(import_class(name))
-            out["activations"] = activations
-        elif key in np_ndarrays:
-            out[key] = np.array(value)
-        else:
-            out[key] = value
-    # print("out:" + str(out))
-    return out
+    return data
 
 
 def divide2sets(x, y, cv_frac, test_frac, shuffle=False, transposed=False):

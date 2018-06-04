@@ -1,6 +1,5 @@
 import sys
 sys.path.append('../')
-import datetime
 import numpy as np
 import scipy.io
 
@@ -26,28 +25,23 @@ def init_hand_writing():
     x_raw = matrix["X"]
     y_raw = matrix["y"]
 
-    #print("X_raw:" + print_matrix(x_raw,2))
-    #print("Y_raw:" + print_matrix(y_raw, 2))
-    #print("mean X_raw:" + str(np.sum(x_raw) / x_raw.shape[0] / x_raw.shape[1]))
-    #print("max X_raw:" + str(np.max(x_raw)) + " min X_raw:" + str(np.min(x_raw)))
-
     m = x_raw.shape[0]
     n_0 = x_raw.shape[1]
     n_l = 10
 
     y_class = np.zeros((m, n_l))
     for i in range(0,n_l):
-        y_class[:,i:i+1] = (y_raw == (i + 1))
+        y_class[:, i:i+1] = np.int64(y_raw == (i + 1))
 
     res = divide2sets(x_raw, y_class, 0.01, 0, True, True)
 
     print("shape: n0:" + str(n_0) + " nL:" + str(n_l) + " m:" + str(m))
 
     parameters = SetupParams()
-    parameters.alpha = 0.5
-    parameters.alpha_min = 0.02
-    parameters.lambd = 0.8
-    parameters.iterations = 500
+    parameters.alpha = 0.1
+    parameters.alpha_min = 0.01
+    parameters.lambd = 2
+    parameters.iterations = 100
     parameters.graph = True
     parameters.topology = [n_0, 300, 200, 100, n_l]
     parameters.activations = [act.ReLU,act.Sigmoid]
@@ -63,11 +57,25 @@ def init_hand_writing():
     return parameters
 
 
-params = init_hand_writing()
-network = learn(params)
+parameters = init_hand_writing()
+network = learn(parameters)
 
 
-#network.get_weights(params)
+
+network.get_weights(parameters.params)
+file = '../testCases/handWr' + str(parameters)
+if not parameters.x_cv is None:
+    y_hat,err = evaluate(network, parameters.x_cv, parameters.y_cv)
+    file += 'ecv' + '{:5.2f}'.format(err * 100)
+else:
+    y_hat,err = evaluate(network, parameters.x, parameters.y)
+    file += 'etr' + '{:5.2f}'.format(err * 100)
+
+file += ".json.gz"
+
+save_params(parameters.to_dict(),file)
+
+
 #ts = "{:%Y%m%d-%H%M%S}".format(datetime.datetime.now())
 #if "X_t" in params:
 #    y_hat,acc = evaluate(network, params["X_t"], params["Y_t"])

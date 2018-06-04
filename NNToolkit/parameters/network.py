@@ -14,7 +14,7 @@ class NetworkParams:
         l_str = str(layer_idx)
         self.__params["w" + l_str] = w
         self.__params["b" + l_str] = b
-        if dw & db:
+        if not ((dw is None) | (db is None)):
             self.__params["dw" + l_str] = dw
             self.__params["db" + l_str] = db
 

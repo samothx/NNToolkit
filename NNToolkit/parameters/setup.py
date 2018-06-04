@@ -65,7 +65,7 @@ class SetupParams:
         if self.x_t is not None:
             as_dict["x_t"] = self.x_t.tolist()
 
-        if self.y_cv is not None:
+        if self.y_t is not None:
             as_dict["y_t"] = self.y_t.tolist()
 
         return as_dict
@@ -121,3 +121,12 @@ class SetupParams:
             setup.params = NetworkParams.from_dict(setup_dict["params"])
 
         return setup
+
+    def __str__(self):
+        res = 'n' + str(self.topology[0])
+        for layer_size in self.topology:
+            res += '-' + str(layer_size)
+        res += 'a' + str(self.alpha)
+        res += 'l' + str(self.lambd)
+        res += 'i' + str(self.iterations)
+        return res
