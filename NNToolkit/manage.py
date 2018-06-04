@@ -2,7 +2,11 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 # import NNToolkit.activation as act
-from NNToolkit.parameters.result import SetupParams, LayerParams
+# from NNToolkit.parameters.result import ResultParams
+from NNToolkit.parameters.setup import SetupParams
+from NNToolkit.parameters.layer import LayerParams
+from NNToolkit.parameters.runtime import RuntimeParams
+from NNToolkit.parameters.result import ResultParams
 
 from NNToolkit.layer import Layer
 from NNToolkit.util import adapt_lr
@@ -36,8 +40,9 @@ def create(parameters):
     layer_params.local_params = parameters.local_params
     layer_params.size = parameters.topology[1]
     layer_params.activation = activations[0]()
-    if parameters.local_params & parameters.has_params(1):
-        layer_params.weight, layer_params.bias = parameters.get_params(1)
+    if parameters.local_params & parameters.params.has_params(1):
+        layer_params.weight, layer_params.bias = parameters.params.get_params(1)
+
     layer_params.valid()
 
     root_layer = Layer(layer_params, 1, parameters.topology[0])
@@ -46,8 +51,8 @@ def create(parameters):
         layer_params.size = parameters.topology[i]
         layer_params.activation = activations[i - 1]()
 
-        if parameters.local_params & parameters.has_params(i):
-            layer_params.weight, layer_params.bias = parameters.get_params(i)
+        if parameters.local_params & parameters.params.has_params(i):
+            layer_params.weight, layer_params.bias = parameters.params.get_params(i)
 
         root_layer.add_layer(layer_params)
 
@@ -76,117 +81,127 @@ def get_error(y_hat, y):
 
 def evaluate(network, x, y=None):
     # print("network:\n" + str(network) + "\n")
-    res = network.process(x, {})
+    params = RuntimeParams()
+    params.set_eval(y)
+    res = network.process(x, params)
+    assert isinstance(res, ResultParams)
     err = None
     if y is not None:
-        err = get_error(res["Y_hat"], y)
+        err = get_error(res.y_hat, y)
 
-    return res["Y_hat"], err
+    return res.y_hat, err
 
 
 def learn(parameters):
-    assert isinstance(parameters,SetupParams)
+    assert isinstance(parameters, SetupParams)
     # TODO: ensure alpha and local_params unless we implement external minimization
     parameters.local_params = True
 
     network = create(parameters)
     print("network:\n" + str(network) + "\n")
 
-    x = parameters["X"]
-    y = parameters["Y"]
+    rt_params = RuntimeParams()
+    rt_params.set_train(parameters.y)
+    if not parameters.params.is_empty():
+        rt_params.set_params(parameters.params)
 
-    verbose = parameters["verbose"]
-    iterations = parameters["iterations"]
-
-    graph = False
+    graph = parameters.graph
     graph_x = []
     graph_j = []
     graph_e = []
     graph_e_t = []
 
-    if "graph" in parameters:
-        graph = parameters["graph"]
-
-    if parameters["verbose"] > 0:
-        print("X:    " + print_matrix(parameters["X"], 6))
-        print("Y:    " + print_matrix(parameters["Y"], 6))
-
-    alpha_min = -1
-    alpha = 0
-
-    if "alpha" in parameters:
-        alpha = parameters["alpha"]
-        if "alpha_min" in parameters:
-            alpha_min = parameters["alpha_min"]
-            if alpha_min >= alpha:
-                alpha_min = -1
-
-    params = {"Y": y, "backprop": True, "alpha": alpha}
-
-    if "lambda" in parameters:
-        lambd = parameters["lambda"]
-        if lambd:
-            params["lambda"] = lambd
-
-    if verbose > 2:
-        params["verbose"] = True
-
-    if ("X_t" in parameters) & ("Y_t" in parameters):
-        y_t = parameters["Y_t"]
-        x_t = parameters["X_t"]
+    if parameters.alpha_min < parameters.alpha:
+        adapt_alpha = True
     else:
-        y_t = None
-        x_t = None
+        adapt_alpha = False
 
+    rt_params.set_alpha(parameters.alpha)
+
+    if parameters.lambd:
+        rt_params.set_lambda(parameters.lambd)
+
+    if parameters.verbosity > 0:
+        print("X:    " + print_matrix(parameters.x, 6))
+        print("Y:    " + print_matrix(parameters.y, 6))
+
+    if parameters.verbosity > 2:
+        rt_params.set_verbose(True)
+
+    iterations = parameters.iterations
     update_iv = min(max(int(iterations / 100), 10), 100)
+
+    x = parameters.x
+
+    update = False
+    res = None
 
     for i in range(0, iterations):
 
         if (i % update_iv) == 0:
             update = True
 
-            if (alpha != 0) & (alpha_min > 0):
-                tmp = adapt_lr(alpha, alpha_min, iterations, i)
-                # print("new learn rate:" + str(tmp))
-                params["alpha"] = tmp
+            if adapt_alpha:
+                rt_params.set_alpha(adapt_lr(parameters.alpha, parameters.alpha_min, iterations, i))
         else:
             update = False
 
         if (i % (iterations / 10)) == 0:
-            if verbose > 1:
-                params["verbose"] = True
+            if parameters.verbosity > 1:
+                rt_params.set_verbose(True)
                 print("iteration: " + str(i))
 
-        res = network.process(x, params)
+        res = network.process(x, rt_params)
 
-        if update & graph:
-            err = get_error(res["Y_hat"], y)
-            graph_x.append(i)
-            graph_j.append(res["cost"])
-            graph_e.append(err)
-            if y_t is not None:
-                y_hat, err_t = evaluate(network, x_t, y_t)
-                graph_e_t.append(err_t)
-                err_str = " test err:" + "{:5.2f}".format(err_t * 100) + "%"
+        if update:
+            err = get_error(res.y_hat, parameters.y)
+            if graph:
+                graph_x.append(i)
+                graph_j.append(res.cost)
+                graph_e.append(err)
+
+            if parameters.x_cv is not None:
+                y_hat, err_cv = evaluate(network, parameters.x_cv, parameters.y_cv)
+                if graph:
+                    graph_e_t.append(err_cv)
+                err_str = " test err:" + "{:5.2f}".format(err_cv * 100) + "%"
             else:
                 err_str = ''
 
             print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) + " {:5d}".format(i) +
-                  " - cost:" + "{:8.5f}".format(res["cost"]) + " err:" + "{:5.2f}".format(err*100) + "%" + err_str)
+                  " - cost:" + "{:8.5f}".format(res.cost) + " err:" + "{:5.2f}".format(err*100) + "%" + err_str)
 
-        if verbose > 0:
+        if parameters.verbosity > 0:
             # TODO: cleanup
-            if (verbose < 3) & ("verbose" in params):
-                del params["verbose"]
-            if verbose > 1:
-                print("Y_hat:" + print_matrix(res["Y_hat"], 6) + "\n")
-                print("Y    :" + print_matrix(params["Y"], 6) + "\n")
-            if (verbose > 2) | (((i % (iterations / 10)) == 0) & ("cost" in res)):
-                print("{:5d}".format(i) + " - cost:" + str(res["cost"]))
-                if verbose > 1:
+            if (parameters.verbosity < 3) & rt_params.is_verbose():
+                rt_params.set_verbose(False)
+            if parameters.verbosity > 1:
+                print("Y_hat:" + print_matrix(res.y_hat, 6) + "\n")
+                print("Y    :" + print_matrix(parameters.y, 6) + "\n")
+            if (parameters.verbosity > 2) | ((i % (iterations / 10)) == 0):
+                print("{:5d}".format(i) + " - cost:" + str(res.cost))
+                if parameters.verbosity > 1:
                     print("***********************************************")
 
-    if graph:
+    if not update & (res is not None):
+        err = get_error(res.y_hat, parameters.y)
+        if graph:
+            graph_x.append(iterations)
+            graph_j.append(res.cost)
+            graph_e.append(err)
+
+        if parameters.x_cv is not None:
+            y_hat, err_cv = evaluate(network, parameters.x_cv, parameters.y_cv)
+            if graph:
+                graph_e_t.append(err_cv)
+            err_str = " test err:" + "{:5.2f}".format(err_cv * 100) + "%"
+        else:
+            err_str = ''
+
+        print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) + " {:5d}".format(iterations) +
+              " - cost:" + "{:8.5f}".format(res.cost) + " err:" + "{:5.2f}".format(err*100) + "%" + err_str)
+
+    if parameters.graph:
         plt.subplot(2, 1, 1)
         plt.plot(graph_x, graph_j, label='Cost')
         plt.legend()
@@ -197,19 +212,16 @@ def learn(parameters):
         plt.legend()
         plt.show()
 
-    if verbose >= 1:
-        params["verbose"] = True
+    if parameters.verbosity >= 1:
+        rt_params.set_verbose(True)
+        res = network.process(x, rt_params)
+        print("last -  cost:" + str(res.cost))
 
-    res = network.process(x, params)
+        y_hat, acc = evaluate(network, x, parameters.y)
+        print("training error:" + "{:2.2f}".format(acc*100) + "%")
 
-    if "cost" in res:
-        print("last -  cost:" + str(res["cost"]))
-
-    y_hat, acc = evaluate(network, x, parameters["Y"])
-    print("training error:" + "{:2.2f}".format(acc*100) + "%")
-
-    if "X_t" in parameters:
-        y_hat, acc = evaluate(network, parameters["X_t"], parameters["Y_t"])
-        print("test error:    " + "{:2.2f}".format(acc*100) + "%")
+        if "X_t" in parameters:
+            y_hat, acc = evaluate(network, parameters.x_cv, parameters.y_cv)
+            print("test error:    " + "{:2.2f}".format(acc*100) + "%")
 
     return network

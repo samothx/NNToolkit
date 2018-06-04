@@ -178,8 +178,8 @@ class Terminal(Layer):
         m = a_prev.shape[1]
         n = a_prev.shape[0]
 
-        y_hat = np.zeros((n, m))
         if n > 1:
+            y_hat = np.zeros((n, m))
             y_hat[np.where(a_prev == np.max(a_prev, axis=0))] = 1
         else:
             y_hat = np.int64(a_prev > params.get_threshold())

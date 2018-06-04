@@ -1,5 +1,5 @@
 from NNToolkit.manage import create
-from NNToolkit.parameters.result import SetupParams
+from NNToolkit.parameters.setup import SetupParams
 
 # TODO: input normalization
 # TODO: learn to plot functions

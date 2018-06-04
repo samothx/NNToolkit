@@ -10,11 +10,13 @@ class SetupParams:
     def __init__(self):
         self.alpha = 0.01
         self.alpha_min = 0.01
+        self.lambd = 0
         self.iterations = 1000
         self.activations = [act.ReLU, act.Sigmoid]
         self.topology = None
         self.verbosity = 0
         self.local_params = True
+        self.graph = False
         self.params = NetworkParams()
         self.x = None
         self.y = None
@@ -33,6 +35,8 @@ class SetupParams:
     def to_dict(self):
         as_dict = {"alpha": self.alpha,
                    "alpha_min": self.alpha_min,
+                   "lambda": self.lambd,
+                   "graph": self.graph,
                    "iterations": self.iterations,
                    "topology": self.topology,
                    "verbosity": self.verbosity,
@@ -80,6 +84,8 @@ class SetupParams:
 
         setup.alpha = setup_dict["alpha"]
         setup.alpha_min = setup_dict["alpha_min"]
+        setup.lambd = setup_dict["lambda"]
+        setup.graph = setup_dict["graph"]
         setup.iterations = setup_dict["iterations"]
         setup.topology = setup_dict["topology"]
         setup.verbosity = setup_dict["verbosity"]

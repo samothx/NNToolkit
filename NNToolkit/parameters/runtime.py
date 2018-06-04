@@ -1,11 +1,12 @@
+from NNToolkit.parameters.network import NetworkParams
+
+
 class RuntimeParams:
-    def __init__(self, x=None, y=None, x_cv=None, y_cv=None):
+    def __init__(self):
         self.__learn = False
-        self.__x = x
-        self.__y = y
-        self.__x_cv = x_cv
-        self.__y_cv = y_cv
+        self.__y = None
         self.__verbose = False
+        self.__params = NetworkParams()
         self.__weight = None
         self.__bias = None
         self.__alpha = 0.01
@@ -14,19 +15,13 @@ class RuntimeParams:
         self.__threshold = 0.5
         self.__max_a = 0
 
-    def valid(self):
-        assert self.__x is not None
-
     # hand down weight instead of weights held in layers
     # makes layers pass back derivatives in results
-    def set_params(self, weight, bias):
-        self.__weight = weight
-        self.__bias = bias
+    def set_params(self, params):
+        self.__params = params
 
     def get_params(self, layer_idx):
-        # weights start at layer 1
-        assert layer_idx > 0
-        return self.__weight[layer_idx - 1], self.__bias[layer_idx - 1]
+        return self.__params.get_params(layer_idx)
 
     def set_lambda(self, lambd):
         self.__lambda = lambd
@@ -54,13 +49,11 @@ class RuntimeParams:
     def get_threshold(self):
         return self.__threshold
 
-    def set_eval(self, x, y=None):
-        self.__x = x
+    def set_eval(self, y=None):
         self.__y = y
         self.__learn = False
 
-    def set_train(self, x, y):
-        self.__x = x
+    def set_train(self, y):
         self.__y = y
         self.__learn = True
 
@@ -70,9 +63,9 @@ class RuntimeParams:
     def get_y(self):
         return self.__y
 
-    def set_cv(self, x, y):
-        self.__x_cv = x
-        self.__y_cv = y
+    # def set_cv(self, x, y):
+    #     self.__x_cv = x
+    #     self.__y_cv = y
 
     def set_verbose(self, verbosity):
         self.__verbose = verbosity
