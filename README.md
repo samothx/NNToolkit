@@ -37,6 +37,8 @@ This is work in progress. So far the network supports the following features:
 - Various hyper parameters.
 - L2 regularization.
 - Adaptive learn rate.
+- Gradient checking.
+- Graphical output of cost, train & cross validation error over iterations.
 - Function to shuffle and split input into train,cross validation and test set 
 - Basic built in gradient descent
 - Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
