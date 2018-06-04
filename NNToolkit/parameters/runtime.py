@@ -11,7 +11,7 @@ class RuntimeParams:
         self.__bias = None
         self.__alpha = 0.01
         self.__lambda = 0
-        self.__dump_mode = False
+#        self.__dump_mode = False
         self.__threshold = 0.5
         self.__max_a = 0
 
@@ -73,8 +73,8 @@ class RuntimeParams:
     def is_verbose(self):
         return self.__verbose
 
-    def set_dump_mode(self, on):
-        self.__dump_mode = on
+ #   def set_dump_mode(self, on):
+ #       self.__dump_mode = on
 
-    def is_dump_mode(self):
-        return self.__dump_mode
+ #   def is_dump_mode(self):
+ #       return self.__dump_mode

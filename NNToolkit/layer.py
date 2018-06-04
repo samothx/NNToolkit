@@ -73,7 +73,7 @@ class Layer:
         else:
             # take parameters from params
             w, b = params.get_params(self.__layer_idx)
-            assert w & b
+            assert (w is not None) & (b is not None)
             assert (w.shape == (self.__size, self.__prev_size)) & (b.shape == (self.__size, 1))
 
         # if not (a_in.shape[0] == self.__prev_size):
@@ -96,6 +96,7 @@ class Layer:
 
         # do back propagation if requested
         if params.is_learn():
+            # print("layer learn:" + str(self.__layer_idx))
             da = res.da
             m = da.shape[1]
             dz = self.__activation.get_grads(z, da)
@@ -128,13 +129,19 @@ class Layer:
                 self.__b = b
             else:
                 res.set_derivatives(self.__layer_idx, dw, db)
-
-            if params.is_dump_mode():
-                res.set_params(self.__layer_idx, w, b)
-                if self.__local_params:
-                    res.set_derivatives(self.__layer_idx, dw, db)
+        else:
+            if res.cost is not None:
+                lambd = params.get_lambda()
+                if lambd > 0:
+                    res.cost = res.cost + lambd * np.sum(np.square(w)) / (2 * a_prev.shape[1])
 
         return res
+
+    def set_local_params(self, local):
+        if not self.__terminal:
+            self.__local_params = local
+            if self.__next_layer:
+                self.__next_layer.set_local_params(local)
 
     def size(self):
         return self.__size

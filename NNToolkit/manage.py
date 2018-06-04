@@ -1,5 +1,6 @@
 import datetime
 import numpy as np
+import copy
 import matplotlib.pyplot as plt
 # import NNToolkit.activation as act
 # from NNToolkit.parameters.result import ResultParams
@@ -7,6 +8,7 @@ from NNToolkit.parameters.setup import SetupParams
 from NNToolkit.parameters.layer import LayerParams
 from NNToolkit.parameters.runtime import RuntimeParams
 from NNToolkit.parameters.result import ResultParams
+from NNToolkit.parameters.network import NetworkParams
 
 from NNToolkit.layer import Layer
 from NNToolkit.util import adapt_lr
@@ -89,21 +91,37 @@ def evaluate(network, x, y=None):
     if y is not None:
         err = get_error(res.y_hat, y)
 
-    return res.y_hat, err
+    return res, err
 
+
+def make_rt_params(parameters):
+    assert isinstance(parameters, SetupParams)
+
+    rt_params = RuntimeParams()
+    rt_params.set_train(parameters.y)
+
+    if not parameters.params.is_empty():
+        rt_params.set_params(parameters.params)
+
+    rt_params.set_alpha(parameters.alpha)
+
+    if parameters.lambd:
+        rt_params.set_lambda(parameters.lambd)
+
+    if parameters.verbosity > 2:
+        rt_params.set_verbose(True)
+
+    return rt_params
 
 def learn(parameters):
     assert isinstance(parameters, SetupParams)
     # TODO: ensure alpha and local_params unless we implement external minimization
     parameters.local_params = True
 
+    rt_params = make_rt_params(parameters)
+
     network = create(parameters)
     print("network:\n" + str(network) + "\n")
-
-    rt_params = RuntimeParams()
-    rt_params.set_train(parameters.y)
-    if not parameters.params.is_empty():
-        rt_params.set_params(parameters.params)
 
     graph = parameters.graph
     graph_x = []
@@ -116,17 +134,9 @@ def learn(parameters):
     else:
         adapt_alpha = False
 
-    rt_params.set_alpha(parameters.alpha)
-
-    if parameters.lambd:
-        rt_params.set_lambda(parameters.lambd)
-
     if parameters.verbosity > 0:
         print("X:    " + print_matrix(parameters.x, 6))
         print("Y:    " + print_matrix(parameters.y, 6))
-
-    if parameters.verbosity > 2:
-        rt_params.set_verbose(True)
 
     iterations = parameters.iterations
     update_iv = min(max(int(iterations / 100), 10), 100)
@@ -225,3 +235,98 @@ def learn(parameters):
             print("test error:    " + "{:2.2f}".format(acc*100) + "%")
 
     return network
+
+
+def check_gradient(parameters):
+    assert isinstance(parameters,SetupParams)
+    print("checking gradient")
+    network = create(parameters)
+    rt_params = make_rt_params(parameters)
+    res = None
+    if parameters.iterations > 0:
+        # run defined iterations
+        for i in range(0,parameters.iterations):
+            res = network.process(parameters.x,rt_params)
+
+    # this is my master copy of the weights
+    nw_params = NetworkParams()
+    network.get_weights(nw_params)
+    print("weights:" + str(nw_params))
+    # make network use weights provided in params instead of local weights
+    network.set_local_params(False)
+    rt_params.set_params(nw_params)
+    # no more parameter updates
+    rt_params.set_alpha(0)
+    res = network.process(parameters.x,rt_params)
+    assert isinstance(res,ResultParams)
+
+    print("cost1:" + str(res.cost))
+
+    res_params = res.get_params()
+    assert isinstance(res_params,NetworkParams)
+    print("grads 0:  " + str(res_params))
+
+    # test network with params provided
+    rt_params.set_params(nw_params)
+    res = network.process(parameters.x, rt_params)
+    print("after: " + str(res.cost))
+
+    layer_params = []
+
+    epsilon = 1e-7
+    approx = []
+    grad = []
+
+    for l in range(1,len(parameters.topology)):
+        print("processing layer:" + str(l))
+        assert nw_params.has_params(l) & res_params.has_derivatives(l)
+        w,b = nw_params.get_params(l)
+        dw,db = res_params.get_derivatives(l)
+        w_tmp = np.copy(w)
+        nw_params.set_params(l, w_tmp, b)
+        rt_params.set_params(nw_params)
+
+        for i in range(0,w.shape[0]):
+            for j in range(0,w.shape[1]):
+                saved_val = w_tmp[i,j]
+                w_tmp[i,j] = saved_val + epsilon
+                res_plus = network.process(parameters.x,rt_params)
+                w_tmp[i, j] = saved_val - epsilon
+                res_minus = network.process(parameters.x,rt_params)
+                approx.append((res_plus.cost - res_minus.cost) / (2*epsilon))
+                grad.append(dw[i,j])
+                w_tmp[i, j] = saved_val
+
+        b_tmp = np.copy(b)
+        nw_params.set_params(l, w, b_tmp)
+        rt_params.set_params(nw_params)
+
+        for i in range(0, b.shape[0]):
+            saved_val = b_tmp[i, 0]
+            b_tmp[i, 0] = saved_val + epsilon
+            res_plus = network.process(parameters.x, rt_params)
+            b_tmp[i, 0] = saved_val - epsilon
+            res_minus = network.process(parameters.x, rt_params)
+            approx.append((res_plus.cost - res_minus.cost) / (2 * epsilon))
+            grad.append(db[i, 0])
+            b_tmp[i, 0] = saved_val
+
+        # print("res." + str(i) + ":" + str(len(layer_params[len(layer_params) - 1])))
+
+    print("approx:" + str(len(approx)))
+    print("grads: " + str(len(grad)))
+
+    approx = np.array(approx).reshape((1,len(approx)))
+    grad = np.array(grad).reshape((1,len(grad)))
+
+    print("approx:" + str(approx))
+    print("grad  :" + str(grad))
+    err = np.linalg.norm(approx - grad) / (np.linalg.norm(approx) + np.linalg.norm(grad))
+    print("error:" + str(err))
+    return err
+
+
+
+
+
+

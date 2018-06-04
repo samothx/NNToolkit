@@ -58,3 +58,9 @@ class NetworkParams:
             if match is not None:
                 params.__params[key] = np.array(as_dict[key])
         return params
+
+    def __str__(self):
+        res = ''
+        for key in self.__params:
+            res += key + ':' + str(self.__params[key].shape) + ' '
+        return res
