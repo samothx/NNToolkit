@@ -116,13 +116,6 @@ def save_params(parameters, filename, zipped=True):
 def read_params(filename, zipped=True):
     # recover parameters from json file / gzipped json file
 
-    def import_class(cname):
-        components = cname.split('.')
-        mod = __import__(components[0])
-        for comp in components[1:]:
-            mod = getattr(mod, comp)
-        return mod
-
     if zipped is True:
         with gzip.open(filename, "rb") as f:
             data = json.loads(f.read().decode("utf-8"))

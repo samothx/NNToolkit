@@ -1,33 +1,19 @@
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-import NNToolkit.activation as act
+# import NNToolkit.activation as act
+from NNToolkit.parameters.result import SetupParams, LayerParams
 
-from NNToolkit.terminal import Terminal
 from NNToolkit.layer import Layer
 from NNToolkit.util import adapt_lr
 from NNToolkit.util import print_matrix
 from NNToolkit.util import read_params
 
-default_params = {
-      "local_params": True,     # initialize & cache W,b in layer
-      "alpha": 0.01,            # learning rate alpha - also triggers update of W,b in layers
-      "alpha_min": 0.01,        # when < alpha triggers adaptive learn rate
-      "lambda": 0.1,           # regularization parameter
-      "verbose": 0,             # levels of verbsity 0-3
-      "iterations": 3000,       # how many iterations of grdient descent
-      "activations": [act.Sigmoid],    # activation function either 2 or one for each layer
-      "topology": []            # array of layer sizes
-      # "X": [[]]               # training input vectors
-      # "Y": [[]]               # training output vectors
-      # "X_t" : [[]]            # test input vectors
-      # "Y_t" : [[]]            # test output vectors
-      # "W": [[]]               # computed weights
-      # "b": [[]]               # computes interceptors
-}
+# TODO: use class based params instead to be able to provide secure defaults
 
 
 def create(parameters):
+
     def make_activations(first, last, count):
         if count > 2:
             act_list = []
@@ -38,49 +24,36 @@ def create(parameters):
         else:
             return [last]
 
-    assert "topology" in parameters
-    layer_sizes = parameters["topology"]
-    layers = len(layer_sizes)
-    assert layers > 1
+    assert isinstance(parameters, SetupParams)
 
-    # add some defaults for optional parameters
+    layer_count = len(parameters.topology)
+    activations = parameters.activations
 
-    if "activations" not in parameters:
-        activations = make_activations(act.TanH, act.Sigmoid, layers)
-    else:
-        activations = parameters["activations"]
-        if len(activations) < (layers - 1):
-            activations = make_activations(activations[0], activations[1], layers)
+    if len(activations) < (layer_count - 1):
+        activations = make_activations(activations[0], activations[1], layer_count)
 
-    if "local_params" not in parameters:
-        local_params = True
-    else:
-        local_params = parameters["local_params"]
+    layer_params = LayerParams()
+    layer_params.local_params = parameters.local_params
+    layer_params.size = parameters.topology[1]
+    layer_params.activation = activations[0]()
+    if parameters.local_params & parameters.has_params(1):
+        layer_params.weight, layer_params.bias = parameters.get_params(1)
+    layer_params.valid()
 
-    def_layer_params = { "local_params": local_params}
-    root = None
+    root_layer = Layer(layer_params, 1, parameters.topology[0])
 
-    for i in range(0, len(layer_sizes)):
-        layer_params = def_layer_params
-        layer_params["size"] = layer_sizes[i]
+    for i in range(2, layer_count):
+        layer_params.size = parameters.topology[i]
+        layer_params.activation = activations[i - 1]()
 
-        if i == 0:
-            # layer 0 only needs size
-            root = Layer(layer_params)
-        else:
-            # get the activations right
-            layer_params["activation"] = activations[i - 1]()
-            if local_params:
-                name = "W" + str(i)
-                if name in parameters:
-                    layer_params["W"] = parameters[name]
-                    name = "b" + str(i)
-                if name in parameters:
-                    layer_params["b"] = parameters[name]
-            root.add_layer(Layer(layer_params))
+        if parameters.local_params & parameters.has_params(i):
+            layer_params.weight, layer_params.bias = parameters.get_params(i)
 
-    root.add_layer(Terminal())
-    return root
+        root_layer.add_layer(layer_params)
+
+    layer_params.prev_size = parameters.topology[layer_count - 1]
+    root_layer.add_layer(layer_params, True)
+    return root_layer
 
 
 def from_param_file(filename, zipped=True):
@@ -112,7 +85,10 @@ def evaluate(network, x, y=None):
 
 
 def learn(parameters):
-    # TODO: timestamps on output
+    assert isinstance(parameters,SetupParams)
+    # TODO: ensure alpha and local_params unless we implement external minimization
+    parameters.local_params = True
+
     network = create(parameters)
     print("network:\n" + str(network) + "\n")
 
