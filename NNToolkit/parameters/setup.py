@@ -10,6 +10,8 @@ class SetupParams:
     def __init__(self):
         self.alpha = 0.01
         self.alpha_min = 0.01
+        self.beta1 = 0
+        self.beta2 = 0
         self.lambd = 0
         self.iterations = 1000
         self.activations = [act.ReLU, act.Sigmoid]
@@ -35,6 +37,8 @@ class SetupParams:
     def to_dict(self):
         as_dict = {"alpha": self.alpha,
                    "alpha_min": self.alpha_min,
+                   "beta1": self.beta1,
+                   "beta2": self.beta2,
                    "lambda": self.lambd,
                    "graph": self.graph,
                    "iterations": self.iterations,
@@ -84,6 +88,8 @@ class SetupParams:
 
         setup.alpha = setup_dict["alpha"]
         setup.alpha_min = setup_dict["alpha_min"]
+        setup.beta1 = setup_dict["beta1"]
+        setup.beta2 = setup_dict["beta2"]
         setup.lambd = setup_dict["lambda"]
         setup.graph = setup_dict["graph"]
         setup.iterations = setup_dict["iterations"]

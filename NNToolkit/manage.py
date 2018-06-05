@@ -9,6 +9,7 @@ from NNToolkit.parameters.layer import LayerParams
 from NNToolkit.parameters.runtime import RuntimeParams
 from NNToolkit.parameters.result import ResultParams
 from NNToolkit.parameters.network import NetworkParams
+from NNToolkit.update import NoUpdate, StandardUpd, MomentumUpd
 
 from NNToolkit.layer import Layer
 from NNToolkit.util import adapt_lr
@@ -100,10 +101,25 @@ def make_rt_params(parameters):
     rt_params = RuntimeParams()
     rt_params.set_train(parameters.y)
 
+    if parameters.alpha > 0:
+        if parameters.beta1:
+            if parameters.beta2:
+                # TODO: implement adam update
+                rt_params.set_update(NoUpdate())
+            else:
+                rt_params.set_update(MomentumUpd(parameters.alpha,parameters.beta1,parameters.topology))
+        else:
+            if parameters.beta2:
+                # TODO: implement RMSProp update
+                rt_params.set_update(NoUpdate())
+            else:
+                rt_params.set_update(StandardUpd(parameters.alpha))
+    else:
+        rt_params.set_update(NoUpdate())
+
+
     if not parameters.params.is_empty():
         rt_params.set_params(parameters.params)
-
-    rt_params.set_alpha(parameters.alpha)
 
     if parameters.lambd:
         rt_params.set_lambda(parameters.lambd)
@@ -152,9 +168,12 @@ def learn(parameters):
             update = True
 
             if adapt_alpha:
-                rt_params.set_alpha(adapt_lr(parameters.alpha, parameters.alpha_min, iterations, i))
+                rt_params.inc(adapt_lr(parameters.alpha, parameters.alpha_min, iterations, i))
+            else:
+                rt_params.inc()
         else:
             update = False
+            rt_params.inc()
 
         if (i % (iterations / 10)) == 0:
             if parameters.verbosity > 1:

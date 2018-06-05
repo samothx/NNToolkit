@@ -1,4 +1,5 @@
 from NNToolkit.parameters.network import NetworkParams
+from NNToolkit.update import Update, NoUpdate
 
 
 class RuntimeParams:
@@ -10,8 +11,8 @@ class RuntimeParams:
         self.__weight = None
         self.__bias = None
         self.__alpha = 0.01
+        self.__update = NoUpdate()
         self.__lambda = 0
-#        self.__dump_mode = False
         self.__threshold = 0.5
         self.__max_a = 0
 
@@ -23,17 +24,24 @@ class RuntimeParams:
     def get_params(self, layer_idx):
         return self.__params.get_params(layer_idx)
 
+    def inc(self,alpha = 0):
+        self.__update.next_it(alpha)
+
+    def set_update(self,update):
+        assert isinstance(update,Update)
+        self.__update = update
+
+    def is_update(self):
+        return self.__update.is_update
+
+    def update(self,w , b , vw, vb, layer_idx):
+        return self.__update.update(w , b , vw, vb, layer_idx)
+
     def set_lambda(self, lambd):
         self.__lambda = lambd
 
     def get_lambda(self):
         return self.__lambda
-
-    def set_alpha(self, alpha):
-        self.__alpha = alpha
-
-    def get_alpha(self):
-        return self.__alpha
 
     def set_max_a(self, max_a):
         assert max_a >= 0

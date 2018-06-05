@@ -39,6 +39,7 @@ This is work in progress. So far the network supports the following features:
 - Various hyper parameters.
 - L2 regularization.
 - Adaptive learn rate.
+- Momentum Gradient Descent
 - Gradient checking.
 - Graphical output of cost, train & cross validation error over iterations.
 - Function to shuffle and split input into train,cross validation and test set 
@@ -50,10 +51,11 @@ This is work in progress. So far the network supports the following features:
 
 ## Todos
 Soon to be added missing Features are:
+- Support for Drop-Out regularization
 - Support for normalization of input
 - Support for more activation functions
 - Support for linear regression Problems
-- Support for Momentum and other optimization techniques for gradient descent.
+- Support for Adam, RMSProp and other optimization techniques for gradient descent.
 - Support for parallel execution of mini-batch gradient descent (my very own strategy) 
  
 I will update this project while the courses I am hearing progress and add more advanced features.     

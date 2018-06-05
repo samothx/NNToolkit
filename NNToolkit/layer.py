@@ -82,6 +82,9 @@ class Layer:
         assert a_prev.shape[0] == self.__prev_size
 
         # thats it, forward propagation
+        #print("layer:" + str(self.__layer_idx) + " w:" + str(w.shape))
+        #print("layer:" + str(self.__layer_idx) + " b:" + str(b.shape))
+        #print("layer:" + str(self.__layer_idx) + " a:" + str(a_prev.shape))
         z = np.dot(w, a_prev) + b
         a_next = self.__activation.forward(z)
 
@@ -119,16 +122,18 @@ class Layer:
                 print("db[" + str(self.__layer_idx) + "]:" + print_matrix(db, 6))
                 print("dA[" + str(self.__layer_idx - 1) + "]:" + print_matrix(res["dA"], 6))
 
-            alpha = params.get_alpha()
-            if alpha > 0:
-                w = w - alpha * dw
-                b = b - alpha * db
+            if params.is_update():
+                w, b = params.update(w, b, dw, db, self.__layer_idx)
 
-            if self.__local_params:
-                self.__w = w
-                self.__b = b
+                if self.__local_params:
+                    self.__w = w
+                    self.__b = b
+                else:
+                    res.set_params(self.__layer_idx, w, b)
             else:
-                res.set_derivatives(self.__layer_idx, dw, db)
+                if not self.__local_params:
+                    res.set_derivatives(self.__layer_idx, dw, db)
+
         else:
             if res.cost is not None:
                 lambd = params.get_lambda()

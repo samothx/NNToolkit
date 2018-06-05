@@ -21,12 +21,12 @@ alpha_params = {}
 
 
 def adapt_lr(alpha_max, alpha_min, i_max, i_curr):
+    # TODO: probably can do better than this
     if (alpha_max, alpha_min, i_max) in alpha_params:
         b = alpha_params[(alpha_max, alpha_min, i_max)]
     else:
         alpha_params[(alpha_max, alpha_min, i_max)] = b = - i_max / (1 - alpha_max/alpha_min)
     return alpha_max * b / (i_curr + b)
-
 
 # print a matrix to a string
 # line break after each row,
@@ -114,6 +114,15 @@ def read_params(filename, zipped=True):
     return data
 
 
+def shuffle_xy(x,y):
+    m = x.shape[1]
+    n = x.shape[0]
+    n_y = y.shape[0]
+
+    permutation = list(np.random.permutation(m))
+    return x[:, permutation].reshape((n, m)), y[:, permutation].reshape((n_y, m))
+
+
 def divide2sets(x, y, cv_frac, test_frac, shuffle=False, transposed=False):
 
     assert (cv_frac < 1) & (test_frac < 1) & ((cv_frac + test_frac) < 1)
@@ -121,83 +130,55 @@ def divide2sets(x, y, cv_frac, test_frac, shuffle=False, transposed=False):
     # print("x:     " + print_matrix(x,7))
     # print("y:     " + print_matrix(y,7))
 
-    if not transposed:
-        # x/y vectors are column vectors
-        m = x.shape[1]
-        n = x.shape[0]
-        n_y = y.shape[0]
-
-        # print("m,n:(" + str(m) + "," + str(n) + ")")
-        # print("shape x:" + str(x.shape))
-        if shuffle:
-            work = np.zeros((m, n + n_y))
-            work[:, 0:n] = x.T
-            work[:, n:n + n_y] = y.T
-            # print("work:  " + print_matrix(work,7))
-            np.random.shuffle(work)
-            x_work = work[:, 0:n].T
-            y_work = work[:, n:n + n_y].T
-        else:
-            x_work = x
-            y_work = y
+    if transposed:
+        x_wrk = x.T
+        y_wrk = y.T
     else:
-        # x/y vectors are row vectors
-        m = x.shape[0]
-        n = x.shape[1]
-        n_y = y.shape[1]
-        if shuffle:
-            work = np.zeros((m, n + n_y))
-            work[:, 0:n] = x
-            work[:, n:n + n_y] = y
-            np.random.shuffle(work)
-            x_work = work[:, 0:n].T
-            y_work = work[:, n:n + n_y].T
-        else:
-            x_work = x.T
-            y_work = y.T
+        x_wrk = x
+        y_wrk = y
 
-    # print("x_work:" + print_matrix(x_work,7))
-    # print("y_work:" + print_matrix(y_work,7))
+        # x/y vectors are column vectors
+    m = x_wrk.shape[1]
+    n = x_wrk.shape[0]
+    n_y = y_wrk.shape[0]
+
+    # print("m,n:(" + str(m) + "," + str(n) + ")")
+    # print("shape x:" + str(x.shape))
+    if shuffle:
+        x_wrk,y_wrk = shuffle_xy(x_wrk, y_wrk)
+
+    # print("x_wrk:" + print_matrix(x_wrk,7))
+    # print("y_wrk:" + print_matrix(y_wrk,7))
 
     train_frac = 1 - cv_frac - test_frac
     train_size = int(m * train_frac)
 
     start = 0
     end = train_size
-    x_train = x_work[:, start:end]
-    y_train = y_work[:, start:end]
+    x_train = x_wrk[:, start:end]
+    y_train = y_wrk[:, start:end]
 
     start = end
 
-    if cv_frac:
+    if cv_frac > 0:
         size = int(m * cv_frac)
-        if (size == 0) & (train_size < m):
+        if (size == 0) & (train_size < m) & (test_frac == 0):
             size = 1
         end = start + size
-        x_cv = x_work[:, start:end]
-        y_cv = y_work[:, start:end]
+        x_cv = x_wrk[:, start:end]
+        y_cv = y_wrk[:, start:end]
         start = end
     else:
         x_cv = None
         y_cv = None
 
-    if (test_frac > 0) & (start < m):
-        x_test = x_work[:, start:m]
-        y_test = y_work[:, start:m]
+    if (test_frac > 0):
+        x_test = x_wrk[:, start:m]
+        y_test = y_wrk[:, start:m]
     else:
         x_test = None
         y_test = None
 
-    # print("x_train:" + print_matrix(x_train,8))
-    # print("y_train:" + print_matrix(y_train,8))
-
-    # if x_cv is not None:
-    #     print("x_cv:   " + print_matrix(x_cv,8))
-    #     print("y_cv    :" + print_matrix(y_cv,8))
-
-    # if x_test is not None:
-    #     print("x_test:  " + print_matrix(x_test,8))
-    #     print("y_test:  " + print_matrix(y_test,8))
 
     res = {"X_train": x_train, "Y_train": y_train}
 
