@@ -38,10 +38,11 @@ def init_hand_writing():
     print("shape: n0:" + str(n_0) + " nL:" + str(n_l) + " m:" + str(m))
 
     parameters = SetupParams()
-    parameters.alpha = 0.5
-    parameters.alpha_min = 0.05
+    parameters.alpha = 0.001
+    parameters.alpha_min = 0.0005
     parameters.beta1 = 0.9
-    parameters.lambd = 8
+    parameters.beta2 = 0.99
+    parameters.lambd = 1
     parameters.iterations = 300
     parameters.graph = True
     parameters.topology = [n_0, 300, 200, 100, n_l]

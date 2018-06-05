@@ -2,14 +2,12 @@ import datetime
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
-# import NNToolkit.activation as act
-# from NNToolkit.parameters.result import ResultParams
 from NNToolkit.parameters.setup import SetupParams
 from NNToolkit.parameters.layer import LayerParams
 from NNToolkit.parameters.runtime import RuntimeParams
 from NNToolkit.parameters.result import ResultParams
 from NNToolkit.parameters.network import NetworkParams
-from NNToolkit.update import NoUpdate, StandardUpd, MomentumUpd
+from NNToolkit.update import NoUpdate, StandardUpd, MomentumUpd, RMSPropUpd, AdamUpd
 
 from NNToolkit.layer import Layer
 from NNToolkit.util import adapt_lr
@@ -104,14 +102,13 @@ def make_rt_params(parameters):
     if parameters.alpha > 0:
         if parameters.beta1:
             if parameters.beta2:
-                # TODO: implement adam update
-                rt_params.set_update(NoUpdate())
+                rt_params.set_update(AdamUpd(parameters.alpha,parameters.beta1,parameters.beta2,parameters.epsilon, parameters.topology))
             else:
                 rt_params.set_update(MomentumUpd(parameters.alpha,parameters.beta1,parameters.topology))
         else:
             if parameters.beta2:
-                # TODO: implement RMSProp update
-                rt_params.set_update(NoUpdate())
+                # TODO: debug RMSPropUpd
+                rt_params.set_update(RMSPropUpd(parameters.alpha, parameters.beta2, parameters.epsilon, parameters.topology))
             else:
                 rt_params.set_update(StandardUpd(parameters.alpha))
     else:
@@ -234,6 +231,8 @@ def learn(parameters):
         plt.subplot(2, 1, 1)
         plt.plot(graph_x, graph_j, label='Cost')
         plt.legend()
+        # title = 'Cost Function, α:' + str(parameters.alpha)
+        plt.title('Cost Function over iterations') # , α:' + str(parameters.alpha)  , β')
         plt.subplot(2, 1, 2)
         plt.plot(graph_x, graph_e, label='Train Error')
         if len(graph_e_t):

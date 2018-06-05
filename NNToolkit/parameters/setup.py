@@ -12,6 +12,7 @@ class SetupParams:
         self.alpha_min = 0.01
         self.beta1 = 0
         self.beta2 = 0
+        self.epsilon = 1e-8
         self.lambd = 0
         self.iterations = 1000
         self.activations = [act.ReLU, act.Sigmoid]
@@ -39,6 +40,7 @@ class SetupParams:
                    "alpha_min": self.alpha_min,
                    "beta1": self.beta1,
                    "beta2": self.beta2,
+                   "epsilon": self.epsilon,
                    "lambda": self.lambd,
                    "graph": self.graph,
                    "iterations": self.iterations,
@@ -90,6 +92,7 @@ class SetupParams:
         setup.alpha_min = setup_dict["alpha_min"]
         setup.beta1 = setup_dict["beta1"]
         setup.beta2 = setup_dict["beta2"]
+        setup.epsilon = setup_dict["epsilon"]
         setup.lambd = setup_dict["lambda"]
         setup.graph = setup_dict["graph"]
         setup.iterations = setup_dict["iterations"]
