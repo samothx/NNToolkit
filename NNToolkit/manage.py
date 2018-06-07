@@ -1,6 +1,5 @@
 import datetime
 import numpy as np
-import copy
 import matplotlib.pyplot as plt
 from NNToolkit.parameters.setup import SetupParams
 from NNToolkit.parameters.layer import LayerParams
@@ -57,8 +56,8 @@ def create(parameters):
 
         root_layer.add_layer(layer_params)
 
-    layer_params.prev_size = parameters.topology[layer_count - 1]
-    root_layer.add_layer(layer_params, True)
+    # layer_params.prev_size = parameters.topology[layer_count - 1]
+    # root_layer.add_layer(layer_params, True)
     return root_layer
 
 
@@ -84,11 +83,14 @@ def evaluate(network, x, y=None):
     # print("network:\n" + str(network) + "\n")
     params = RuntimeParams()
     params.set_eval(y)
-    res = network.process(x, params)
+    # print("evaluate process start {:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()))
+    res, da = network.process(x, params)
+    # print("evaluate process done {:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()))
     assert isinstance(res, ResultParams)
     err = None
     if y is not None:
         err = get_error(res.y_hat, y)
+        # print("evaluate error done {:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()))
 
     return res, err
 
@@ -102,18 +104,18 @@ def make_rt_params(parameters):
     if parameters.alpha > 0:
         if parameters.beta1:
             if parameters.beta2:
-                rt_params.set_update(AdamUpd(parameters.alpha,parameters.beta1,parameters.beta2,parameters.epsilon, parameters.topology))
+                rt_params.set_update(AdamUpd(parameters.alpha, parameters.beta1, parameters.beta2, parameters.epsilon,
+                                             parameters.topology))
             else:
-                rt_params.set_update(MomentumUpd(parameters.alpha,parameters.beta1,parameters.topology))
+                rt_params.set_update(MomentumUpd(parameters.alpha, parameters.beta1, parameters.topology))
         else:
             if parameters.beta2:
-                # TODO: debug RMSPropUpd
-                rt_params.set_update(RMSPropUpd(parameters.alpha, parameters.beta2, parameters.epsilon, parameters.topology))
+                rt_params.set_update(RMSPropUpd(parameters.alpha, parameters.beta2, parameters.epsilon,
+                                                parameters.topology))
             else:
                 rt_params.set_update(StandardUpd(parameters.alpha))
     else:
         rt_params.set_update(NoUpdate())
-
 
     if not parameters.params.is_empty():
         rt_params.set_params(parameters.params)
@@ -121,10 +123,17 @@ def make_rt_params(parameters):
     if parameters.lambd:
         rt_params.set_lambda(parameters.lambd)
 
+    if parameters.threshold:
+        rt_params.set_threshold(parameters.threshold)
+
+    if parameters.max_z:
+        rt_params.set_max_z(parameters.max_z)
+
     if parameters.verbosity > 2:
         rt_params.set_verbose(True)
 
     return rt_params
+
 
 def learn(parameters):
     assert isinstance(parameters, SetupParams)
@@ -160,10 +169,9 @@ def learn(parameters):
     res = None
 
     for i in range(0, iterations):
-
         if (i % update_iv) == 0:
             update = True
-
+            rt_params.set_compute_y(True)
             if adapt_alpha:
                 rt_params.inc(adapt_lr(parameters.alpha, parameters.alpha_min, iterations, i))
             else:
@@ -177,9 +185,13 @@ def learn(parameters):
                 rt_params.set_verbose(True)
                 print("iteration: " + str(i))
 
-        res = network.process(x, rt_params)
+        res, da = network.process(x, rt_params)
+
+        if res.is_error():
+            raise TypeError(res.error)
 
         if update:
+            rt_params.set_compute_y(False)
             err = get_error(res.y_hat, parameters.y)
             if graph:
                 graph_x.append(i)
@@ -190,12 +202,12 @@ def learn(parameters):
                 y_hat, err_cv = evaluate(network, parameters.x_cv, parameters.y_cv)
                 if graph:
                     graph_e_t.append(err_cv)
-                err_str = " test err:" + "{:5.2f}".format(err_cv * 100) + "%"
+                err_str = " test err:" + "{:6.2f}".format(err_cv * 100) + "%"
             else:
                 err_str = ''
 
             print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) + " {:5d}".format(i) +
-                  " - cost:" + "{:8.5f}".format(res.cost) + " err:" + "{:5.2f}".format(err*100) + "%" + err_str)
+                  " - cost:" + "{:8.5f}".format(res.cost) + " err:" + "{:6.2f}".format(err*100) + "%" + err_str)
 
         if parameters.verbosity > 0:
             # TODO: cleanup
@@ -209,8 +221,9 @@ def learn(parameters):
                 if parameters.verbosity > 1:
                     print("***********************************************")
 
-    if not update & (res is not None):
-        err = get_error(res.y_hat, parameters.y)
+    if not update:
+        y_hat, err = evaluate(network, parameters.x, parameters.y)
+        # err = get_error(y_hat, parameters.y)
         if graph:
             graph_x.append(iterations)
             graph_j.append(res.cost)
@@ -220,19 +233,19 @@ def learn(parameters):
             y_hat, err_cv = evaluate(network, parameters.x_cv, parameters.y_cv)
             if graph:
                 graph_e_t.append(err_cv)
-            err_str = " test err:" + "{:5.2f}".format(err_cv * 100) + "%"
+            err_str = " test err:" + "{:6.2f}".format(err_cv * 100) + "%"
         else:
             err_str = ''
 
         print("{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()) + " {:5d}".format(iterations) +
-              " - cost:" + "{:8.5f}".format(res.cost) + " err:" + "{:5.2f}".format(err*100) + "%" + err_str)
+              " - cost:" + "{:8.5f}".format(res.cost) + " err:" + "{:6.2f}".format(err*100) + "%" + err_str)
 
     if parameters.graph:
         plt.subplot(2, 1, 1)
         plt.plot(graph_x, graph_j, label='Cost')
         plt.legend()
         # title = 'Cost Function, α:' + str(parameters.alpha)
-        plt.title('Cost Function over iterations') # , α:' + str(parameters.alpha)  , β')
+        plt.title('Cost Function over iterations')
         plt.subplot(2, 1, 2)
         plt.plot(graph_x, graph_e, label='Train Error')
         if len(graph_e_t):
@@ -256,15 +269,14 @@ def learn(parameters):
 
 
 def check_gradient(parameters):
-    assert isinstance(parameters,SetupParams)
+    assert isinstance(parameters, SetupParams)
     print("checking gradient")
     network = create(parameters)
     rt_params = make_rt_params(parameters)
-    res = None
     if parameters.iterations > 0:
         # run defined iterations
-        for i in range(0,parameters.iterations):
-            res = network.process(parameters.x,rt_params)
+        for i in range(0, parameters.iterations):
+            network.process(parameters.x, rt_params)
 
     # this is my master copy of the weights
     nw_params = NetworkParams()
@@ -274,14 +286,14 @@ def check_gradient(parameters):
     network.set_local_params(False)
     rt_params.set_params(nw_params)
     # no more parameter updates
-    rt_params.set_alpha(0)
-    res = network.process(parameters.x,rt_params)
-    assert isinstance(res,ResultParams)
+    rt_params.set_update(NoUpdate())
+    res = network.process(parameters.x, rt_params)
+    assert isinstance(res, ResultParams)
 
     print("cost1:" + str(res.cost))
 
     res_params = res.get_params()
-    assert isinstance(res_params,NetworkParams)
+    assert isinstance(res_params, NetworkParams)
     print("grads 0:  " + str(res_params))
 
     # test network with params provided
@@ -289,30 +301,28 @@ def check_gradient(parameters):
     res = network.process(parameters.x, rt_params)
     print("after: " + str(res.cost))
 
-    layer_params = []
-
-    epsilon = 1e-7
+    epsilon = 1e-8
     approx = []
     grad = []
 
-    for l in range(1,len(parameters.topology)):
+    for l in range(1, len(parameters.topology)):
         print("processing layer:" + str(l))
         assert nw_params.has_params(l) & res_params.has_derivatives(l)
-        w,b = nw_params.get_params(l)
-        dw,db = res_params.get_derivatives(l)
+        w, b = nw_params.get_params(l)
+        dw, db = res_params.get_derivatives(l)
         w_tmp = np.copy(w)
         nw_params.set_params(l, w_tmp, b)
         rt_params.set_params(nw_params)
 
-        for i in range(0,w.shape[0]):
-            for j in range(0,w.shape[1]):
-                saved_val = w_tmp[i,j]
-                w_tmp[i,j] = saved_val + epsilon
-                res_plus = network.process(parameters.x,rt_params)
+        for i in range(0, w.shape[0]):
+            for j in range(0, w.shape[1]):
+                saved_val = w_tmp[i, j]
+                w_tmp[i, j] = saved_val + epsilon
+                res_plus = network.process(parameters.x, rt_params)
                 w_tmp[i, j] = saved_val - epsilon
-                res_minus = network.process(parameters.x,rt_params)
+                res_minus = network.process(parameters.x, rt_params)
                 approx.append((res_plus.cost - res_minus.cost) / (2*epsilon))
-                grad.append(dw[i,j])
+                grad.append(dw[i, j])
                 w_tmp[i, j] = saved_val
 
         b_tmp = np.copy(b)
@@ -334,17 +344,11 @@ def check_gradient(parameters):
     print("approx:" + str(len(approx)))
     print("grads: " + str(len(grad)))
 
-    approx = np.array(approx).reshape((1,len(approx)))
-    grad = np.array(grad).reshape((1,len(grad)))
+    approx = np.array(approx).reshape((1, len(approx)))
+    grad = np.array(grad).reshape((1, len(grad)))
 
     print("approx:" + str(approx))
     print("grad  :" + str(grad))
     err = np.linalg.norm(approx - grad) / (np.linalg.norm(approx) + np.linalg.norm(grad))
     print("error:" + str(err))
     return err
-
-
-
-
-
-

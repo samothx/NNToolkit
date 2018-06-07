@@ -38,14 +38,14 @@ def init_hand_writing():
     print("shape: n0:" + str(n_0) + " nL:" + str(n_l) + " m:" + str(m))
 
     parameters = SetupParams()
-    parameters.alpha = 0.001
+    parameters.alpha = 0.0007
     parameters.alpha_min = 0.0005
-    parameters.beta1 = 0.9
-    parameters.beta2 = 0.99
-    parameters.lambd = 1
-    parameters.iterations = 300
+    parameters.beta1 = 0.95
+    parameters.beta2 = 0.999
+    parameters.lambd = 4
+    parameters.iterations = 600
     parameters.graph = True
-    parameters.topology = [n_0, 300, 200, 100, n_l]
+    parameters.topology = [n_0, 200,100, n_l]
     parameters.activations = [act.ReLU,act.Sigmoid]
     parameters.x = res["X_train"]
     parameters.y = res["Y_train"]

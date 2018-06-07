@@ -3,13 +3,16 @@ from NNToolkit.parameters.network import NetworkParams
 
 class ResultParams:
 
-    def __init__(self, y_hat, error=None):
+    def __init__(self, y_hat = None, cost = None, error=None):
         self.error = error
         self.y_hat = y_hat
         self.cost = 0
         self.da = None
         self.__params = None
         self.__dv = None
+
+    def is_error(self):
+        return self.error is not None
 
     def set_params(self, layer_index, w, b):
         if self.__params is None:

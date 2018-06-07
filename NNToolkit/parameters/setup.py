@@ -27,6 +27,8 @@ class SetupParams:
         self.y_cv = None
         self.x_t = None
         self.y_t = None
+        self.max_z = 0
+        self.threshold = 0.5
 
     def valid(self):
         assert self.alpha > 0
@@ -46,7 +48,9 @@ class SetupParams:
                    "iterations": self.iterations,
                    "topology": self.topology,
                    "verbosity": self.verbosity,
-                   "local_params": self.local_params}
+                   "local_params": self.local_params,
+                   "max_z": self.max_z,
+                   "threshold": self.threshold}
 
         tmp_list = []
         for act_name in self.activations:
@@ -99,6 +103,8 @@ class SetupParams:
         setup.topology = setup_dict["topology"]
         setup.verbosity = setup_dict["verbosity"]
         setup.local_params = setup_dict["local_params"]
+        setup.max_z =  setup_dict["max_z"]
+        setup.threshold = setup_dict["threshold"]
 
         pattern = re.compile("^<class '([^']+)'>$")
         setup.activations = []

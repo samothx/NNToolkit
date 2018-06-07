@@ -14,7 +14,8 @@ class RuntimeParams:
         self.__update = NoUpdate()
         self.__lambda = 0
         self.__threshold = 0.5
-        self.__max_a = 0
+        self.__max_z = 0
+        self.__compute_y = False
 
     # hand down weight instead of weights held in layers
     # makes layers pass back derivatives in results
@@ -43,12 +44,12 @@ class RuntimeParams:
     def get_lambda(self):
         return self.__lambda
 
-    def set_max_a(self, max_a):
-        assert max_a >= 0
-        self.__max_a = max_a
+    def set_max_z(self, max_z):
+        assert max_z >= 0
+        self.__max_z = max_z
 
-    def get_max_a(self):
-        return self.__max_a
+    def get_max_z(self):
+        return self.__max_z
 
     def set_threshold(self, threshold):
         assert (threshold < 1) & (threshold > 0)
@@ -57,16 +58,24 @@ class RuntimeParams:
     def get_threshold(self):
         return self.__threshold
 
+    def set_compute_y(self,conpute_y):
+        self.__compute_y = conpute_y
+
     def set_eval(self, y=None):
         self.__y = y
         self.__learn = False
+        self.__compute_y = True
 
-    def set_train(self, y):
+    def set_train(self, y, compute_y=False):
         self.__y = y
         self.__learn = True
+        self.__compute_y = compute_y
 
     def is_learn(self):
         return self.__learn
+
+    def is_compute_y(self):
+        return self.__compute_y
 
     def get_y(self):
         return self.__y

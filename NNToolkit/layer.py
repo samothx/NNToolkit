@@ -9,11 +9,10 @@ from NNToolkit.util import print_matrix
 
 class Layer:
 
-    def __init__(self, params, layer_idx, prev_size, terminal=False):
+    def __init__(self, params, layer_idx, prev_size):
         assert isinstance(params, LayerParams)
         assert layer_idx > 0
 
-        self.__terminal = terminal
         self.__layer_idx = layer_idx
 
         self.__prev_size = prev_size
@@ -21,38 +20,28 @@ class Layer:
 
         self.__next_layer = None  # the next layer
 
-        if terminal:
-            self.__w = None
-            self.__b = None
-            self.__activation = None
-            self.__size = 0
+        self.__size = params.size  # number of input nodes to layer
+        self.__activation = params.activation
+        if params.weight is not None:
+            # pass down precomputed weights
+            self.__w = params.weight
+            self.__b = params.bias
         else:
-            self.__size = params.size  # number of input nodes to layer
-            self.__activation = params.activation
-            if params.weight is not None:
-                # pass down precomputed weights
-                self.__w = params.weight
-                self.__b = params.bias
+            if self.__local_params:
+                self.__w = np.random.randn(self.__size, self.__prev_size) * \
+                           self.__activation.get_he_init(self.__prev_size)
+                self.__b = np.zeros((self.__size, 1))
             else:
-                if self.__local_params:
-                    self.__w = np.random.randn(self.__size, self.__prev_size) * \
-                               self.__activation.get_he_init(self.__prev_size)
-                    self.__b = np.zeros((self.__size, 1))
-                else:
-                    self.__w = None
-                    self.__b = None
+                self.__w = None
+                self.__b = None
 
-    def add_layer(self, params, terminal=False):
+    def add_layer(self, params):
         assert isinstance(params, LayerParams)
-        assert self.__terminal is False
 
         if self.__next_layer is not None:
-            self.__next_layer.add_layer(params, terminal)
+            self.__next_layer.add_layer(params)
         else:
-            if terminal:
-                self.__next_layer = Terminal(params, self.__layer_idx + 1, self.__size)
-            else:
-                self.__next_layer = Layer(params, self.__layer_idx + 1, self.__size)
+            self.__next_layer = Layer(params, self.__layer_idx + 1, self.__size)
 
     def check_ready(self):
         assert self.__size > 0
@@ -82,9 +71,9 @@ class Layer:
         assert a_prev.shape[0] == self.__prev_size
 
         # thats it, forward propagation
-        #print("layer:" + str(self.__layer_idx) + " w:" + str(w.shape))
-        #print("layer:" + str(self.__layer_idx) + " b:" + str(b.shape))
-        #print("layer:" + str(self.__layer_idx) + " a:" + str(a_prev.shape))
+        # print("layer:" + str(self.__layer_idx) + " w:" + str(w.shape))
+        # print("layer:" + str(self.__layer_idx) + " b:" + str(b.shape))
+        # print("layer:" + str(self.__layer_idx) + " a:" + str(a_prev.shape))
         z = np.dot(w, a_prev) + b
         a_next = self.__activation.forward(z)
 
@@ -94,13 +83,38 @@ class Layer:
             print("z[" + str(self.__layer_idx) + "]: " + print_matrix(z, 6))
             print("a[" + str(self.__layer_idx) + "]: " + print_matrix(a_next, 6))
 
-        # let the next layer do its thing
-        res = self.__next_layer.process(a_next, params)
+        da = None
+
+        if self.__next_layer:
+            # let the next layer do its thing
+            res, da = self.__next_layer.process(a_next, params)
+        else:
+            # this is the terminal layer
+            max_z = params.get_max_z()
+            if max_z:
+                size = np.linalg.norm(z)
+                if size > max_z:
+                    return ResultParams(None, None, "a exceeded max size:" + str(size) + ">" + str(max_z)), da
+
+            res = ResultParams()
+
+            if params.is_compute_y():
+                res.y_hat = self.__activation.get_yhat(a_next, threshold=params.get_threshold())
+
+            if params.is_learn():
+                res.cost, da = self.__activation.get_cost(a_next, params.get_y(), learn=True)
+
+        if res.is_error():
+            return res
+
+        # if da is not None:
+        #     print("layer:" + str(self.__layer_idx) + " z:" + str(z.shape) + " a:" + str(a_next.shape) + " da:" + str(da.shape))
+        # else:
+        #     print("layer:" + str(self.__layer_idx) + " z:" + str(z.shape) + " a:" + str(a_next.shape) + " da:None")
 
         # do back propagation if requested
         if params.is_learn():
             # print("layer learn:" + str(self.__layer_idx))
-            da = res.da
             m = da.shape[1]
             dz = self.__activation.get_grads(z, da)
 
@@ -114,13 +128,13 @@ class Layer:
             db = np.sum(dz, axis=1, keepdims=True)/m
 
             if self.__layer_idx > 1:
-                res.da = np.dot(w.T, dz)
+                da = np.dot(w.T, dz)
 
             if params.is_verbose():
                 print("dz[" + str(self.__layer_idx) + "]:" + print_matrix(dz, 6))
                 print("dW[" + str(self.__layer_idx) + "]:" + print_matrix(dw, 6))
                 print("db[" + str(self.__layer_idx) + "]:" + print_matrix(db, 6))
-                print("dA[" + str(self.__layer_idx - 1) + "]:" + print_matrix(res["dA"], 6))
+                print("dA[" + str(self.__layer_idx - 1) + "]:" + print_matrix(da, 6))
 
             if params.is_update():
                 w, b = params.update(w, b, dw, db, self.__layer_idx)
@@ -140,13 +154,13 @@ class Layer:
                 if lambd > 0:
                     res.cost = res.cost + lambd * np.sum(np.square(w)) / (2 * a_prev.shape[1])
 
-        return res
+
+        return res, da
 
     def set_local_params(self, local):
-        if not self.__terminal:
-            self.__local_params = local
-            if self.__next_layer:
-                self.__next_layer.set_local_params(local)
+        self.__local_params = local
+        if self.__next_layer:
+            self.__next_layer.set_local_params(local)
 
     def size(self):
         return self.__size
@@ -163,55 +177,7 @@ class Layer:
             return out
 
     def get_weights(self, params):
-        if not self.__terminal:
-            assert isinstance(params, NetworkParams)
-            params.set_params(self.__layer_idx, self.__w, self.__b)
-            if self.__next_layer is not None:
-                self.__next_layer.get_weights(params)
-
-
-class Terminal(Layer):
-    def __init__(self, params, layer_idx, prev_size):
-        assert isinstance(params, LayerParams)
-        super().__init__(params, layer_idx, prev_size, True)
-
-    def check_ready(self):
-        return True
-
-    def process(self, a_prev, params):
-        assert isinstance(params, RuntimeParams)
-
-        max_a = params.get_max_a()
-        if max_a & (np.linalg.norm(a_prev) > max_a):
-            size = np.linalg.norm(a_prev)
-            if size > max_a:
-                return ResultParams(None, "a exceeded max size:" + str(size) + ">" + str(max_a))
-
-        m = a_prev.shape[1]
-        n = a_prev.shape[0]
-
-        if n > 1:
-            y_hat = np.zeros((n, m))
-            y_hat[np.where(a_prev == np.max(a_prev, axis=0))] = 1
-        else:
-            y_hat = np.int64(a_prev > params.get_threshold())
-
-        res = ResultParams(y_hat)
-
-        y = params.get_y()
-        if y is not None:
-            assert (y.shape == a_prev.shape)
-            # calculate cost function
-            # TODO: allow different cost functions / cost function plugin
-            res.cost = -np.sum(np.multiply(y, np.log(a_prev)) + np.multiply((1-y), np.log(1-a_prev))) / m
-
-            if params.is_learn():
-                res.da = -(np.divide(y, a_prev) - np.divide(1 - y, 1 - a_prev))
-                if params.is_verbose():
-                    print("Y:    " + print_matrix(y))
-                    print("dA[" + str(super().layer_idx() - 1) + "]:" + print_matrix(res.da))
-
-        return res
-
-    def __str__(self):
-        return " "*super().layer_idx() + "[type: terminal idx:" + str(super().layer_idx()) + "]"
+        assert isinstance(params, NetworkParams)
+        params.set_params(self.__layer_idx, self.__w, self.__b)
+        if self.__next_layer is not None:
+            self.__next_layer.get_weights(params)

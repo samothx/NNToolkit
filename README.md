@@ -44,7 +44,7 @@ This is work in progress. So far the network supports the following features:
 - Graphical output of cost, train & cross validation error over iterations.
 - Function to shuffle and split input into train,cross validation and test set 
 - Basic built in gradient descent
-- Allows to supply parameters from outside to enable external minimization algorithms. This feature is only a built in concept and has not been tested.
+- Allows to supply parameters from outside to enable external minimization algorithms.
 - Save/load network parameters to/from file
 - Plotting of cost function and errors over iterations
 
@@ -52,6 +52,7 @@ This is work in progress. So far the network supports the following features:
 ## Todos
 Soon to be added missing Features are:
 - Support for Drop-Out regularization
+- Support for Softmax activation
 - Support for normalization of input
 - Support for more activation functions
 - Support for linear regression Problems
