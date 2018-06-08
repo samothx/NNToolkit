@@ -42,7 +42,8 @@ def init_hand_writing():
     parameters.alpha_min = 0.0005
     parameters.beta1 = 0.95
     parameters.beta2 = 0.999
-    parameters.lambd = 4
+    parameters.lambd = 3
+    parameters.keep_prob = 1
     parameters.iterations = 600
     parameters.graph = True
     parameters.topology = [n_0, 200,100, n_l]

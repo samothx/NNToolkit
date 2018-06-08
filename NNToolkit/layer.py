@@ -6,7 +6,6 @@ from NNToolkit.parameters.network import NetworkParams
 from NNToolkit.parameters.result import ResultParams
 from NNToolkit.util import print_matrix
 
-
 class Layer:
 
     def __init__(self, params, layer_idx, prev_size):
@@ -75,7 +74,19 @@ class Layer:
         # print("layer:" + str(self.__layer_idx) + " b:" + str(b.shape))
         # print("layer:" + str(self.__layer_idx) + " a:" + str(a_prev.shape))
         z = np.dot(w, a_prev) + b
+
         a_next = self.__activation.forward(z)
+
+        if params.is_learn() & (self.__next_layer is not None):
+            keep_prop = params.get_keep_prob()
+            if keep_prop < 1:  # no sense deleting nodesin the output layer
+                d = np.int64(np.random.rand(a_next.shape[0], a_next.shape[1]) < keep_prop)
+                a_next = np.multiply(d, a_next) / keep_prop
+            else:
+                d = None
+        else:
+            d = None
+            keep_prop = 1
 
         if params.is_verbose():
             print("w[" + str(self.__layer_idx) + "]: " + print_matrix(w, 6))
@@ -84,39 +95,33 @@ class Layer:
             print("a[" + str(self.__layer_idx) + "]: " + print_matrix(a_next, 6))
 
         da = None
+        dz = None
 
         if self.__next_layer:
             # let the next layer do its thing
             res, da = self.__next_layer.process(a_next, params)
         else:
-            # this is the terminal layer
-            max_z = params.get_max_z()
-            if max_z:
-                size = np.linalg.norm(z)
-                if size > max_z:
-                    return ResultParams(None, None, "a exceeded max size:" + str(size) + ">" + str(max_z)), da
-
             res = ResultParams()
 
             if params.is_compute_y():
                 res.y_hat = self.__activation.get_yhat(a_next, threshold=params.get_threshold())
 
             if params.is_learn():
-                res.cost, da = self.__activation.get_cost(a_next, params.get_y(), learn=True)
+                res.cost, dz = self.__activation.get_cost(a_next, params.get_y(), True,
+                                                          check_overflow=params.get_check_overflow())
 
         if res.is_error():
             return res
 
-        # if da is not None:
-        #     print("layer:" + str(self.__layer_idx) + " z:" + str(z.shape) + " a:" + str(a_next.shape) + " da:" + str(da.shape))
-        # else:
-        #     print("layer:" + str(self.__layer_idx) + " z:" + str(z.shape) + " a:" + str(a_next.shape) + " da:None")
+        m = a_next.shape[1]
 
-        # do back propagation if requested
         if params.is_learn():
             # print("layer learn:" + str(self.__layer_idx))
-            m = da.shape[1]
-            dz = self.__activation.get_grads(z, da)
+            if self.__next_layer is not None:
+                if d is not None:
+                    da = np.multiply(da, d) / keep_prop
+
+                dz = self.__activation.get_grads(z, da)
 
             lambd = params.get_lambda()
             if lambd > 0:
@@ -153,7 +158,6 @@ class Layer:
                 lambd = params.get_lambda()
                 if lambd > 0:
                     res.cost = res.cost + lambd * np.sum(np.square(w)) / (2 * a_prev.shape[1])
-
 
         return res, da
 

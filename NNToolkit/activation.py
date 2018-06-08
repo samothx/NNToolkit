@@ -57,14 +57,27 @@ class Sigmoid(Activation):
 
         assert y.shape == a.shape
         # calculate cost function
+        # anti div by zero
+
+        if "check_overflow" in kwargs:
+            if np.min(a) == 0:
+                zeros = np.int64(a == 0)
+                if np.count_nonzero(zeros) > 0:
+                    a = a + (zeros * 1e-8)
+
+            if np.max(a) == 1:
+                ones = np.int64(a == 1)
+                if np.count_nonzero(ones) > 0:
+                    a = a - (ones * 1e-8)
+
         cost = -np.sum(np.multiply(y, np.log(a)) + np.multiply((1 - y), np.log(1 - a))) / a.shape[1]
 
         if learn:
-            da = -(np.divide(y, a) - np.divide(1 - y, 1 - a))
+            dz = (a - y)
         else:
-            da = None
+            dz = None
 
-        return cost, da
+        return cost, dz
 
 
 class TanH(Activation):
@@ -78,10 +91,10 @@ class TanH(Activation):
         return np.multiply(1 - np.power(np.tanh(z), 2), da)
 
     def get_cost(self, a, y, learn=True, **kwargs):
-        raise TypeError("get_cost() is implemented on TanH class")
+        raise TypeError("get_cost() is not implemented on TanH class")
 
     def get_yhat(self, a, **kwargs):
-        raise TypeError("get_yhat() is implemented on TanH class")
+        raise TypeError("get_yhat() is not implemented on TanH class")
 
 
 class ReLU(Activation):
@@ -99,7 +112,55 @@ class ReLU(Activation):
         return np.sqrt(2 / l_prev)
 
     def get_cost(self, a, y, learn=True,  **kwargs):
-        raise TypeError("get_cost() is implemented on ReLU class")
+        raise TypeError("get_cost() is not implemented on ReLU class")
 
     def get_yhat(self, a, **kwargs):
-        raise TypeError("get_yhat() is implemented on ReLU class")
+        raise TypeError("get_yhat() is not implemented on ReLU class")
+
+
+class Softmax(Activation):
+
+    def __init__(self):
+        super().__init__("softmax")
+        self.__a = None
+
+    def forward(self, z):
+        raise TypeError("forward() is not implemented on Softmax class")
+
+    def get_grads(self, z, da):
+        # TODO: not really needed but sort out anyway..
+        raise TypeError("get_grads() is not implemented on Softmax class")
+
+    def get_yhat(self, a, **kwargs):
+        # TODO: implement
+        y_hat = np.zeros(a.shape)
+        y_hat[np.where(a == np.max(a, axis=0))] = 1
+        return y_hat
+
+    def get_cost(self, a, y, learn=True, **kwargs):
+        # assert isinstance(params, RuntimeParams)
+        # TODO: implement
+
+        assert y.shape == a.shape
+        # calculate cost function
+        # anti div by zero
+
+        if "check_overflow" in kwargs:
+            if np.min(a) == 0:
+                zeros = np.int64(a == 0)
+                if np.count_nonzero(zeros) > 0:
+                    a = a + (zeros * 1e-8)
+
+            if np.max(a) == 1:
+                ones = np.int64(a == 1)
+                if np.count_nonzero(ones) > 0:
+                    a = a - (ones * 1e-8)
+
+        cost = -np.sum(np.multiply(y, np.log(a)) + np.multiply((1 - y), np.log(1 - a))) / a.shape[1]
+
+        if learn:
+            dz = a - y
+        else:
+            dz = None
+
+        return cost, dz

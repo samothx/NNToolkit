@@ -123,11 +123,17 @@ def make_rt_params(parameters):
     if parameters.lambd:
         rt_params.set_lambda(parameters.lambd)
 
+    if parameters.keep_prob:
+        rt_params.set_keep_prob(parameters.keep_prob)
+
+    if parameters.check_overflow:
+        rt_params.set_chck_overflow(parameters.check_overflow)
+
     if parameters.threshold:
         rt_params.set_threshold(parameters.threshold)
 
-    if parameters.max_z:
-        rt_params.set_max_z(parameters.max_z)
+    # if parameters.max_z:
+    #     rt_params.set_max_z(parameters.max_z)
 
     if parameters.verbosity > 2:
         rt_params.set_verbose(True)

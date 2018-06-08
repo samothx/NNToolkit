@@ -4,6 +4,7 @@ import numpy as np
 from NNToolkit.parameters.network import NetworkParams
 import NNToolkit.activation as act
 
+# TODO: layerwise noDropProb
 
 class SetupParams:
 
@@ -14,6 +15,8 @@ class SetupParams:
         self.beta2 = 0
         self.epsilon = 1e-8
         self.lambd = 0
+        self.keep_prob = 1
+        self.check_overflow = False
         self.iterations = 1000
         self.activations = [act.ReLU, act.Sigmoid]
         self.topology = None
@@ -27,7 +30,7 @@ class SetupParams:
         self.y_cv = None
         self.x_t = None
         self.y_t = None
-        self.max_z = 0
+        # self.max_z = 0
         self.threshold = 0.5
 
     def valid(self):
@@ -44,12 +47,14 @@ class SetupParams:
                    "beta2": self.beta2,
                    "epsilon": self.epsilon,
                    "lambda": self.lambd,
+                   "keep_prob": self.keep_prob,
+                   "check_overflow": self.check_overflow,
                    "graph": self.graph,
                    "iterations": self.iterations,
                    "topology": self.topology,
                    "verbosity": self.verbosity,
                    "local_params": self.local_params,
-                   "max_z": self.max_z,
+                   # "max_z": self.max_z,
                    "threshold": self.threshold}
 
         tmp_list = []
@@ -98,12 +103,14 @@ class SetupParams:
         setup.beta2 = setup_dict["beta2"]
         setup.epsilon = setup_dict["epsilon"]
         setup.lambd = setup_dict["lambda"]
+        setup.keep_prob = setup_dict["keep_prob"]
+        setup.check_overflow = setup_dict["check_overflow"]
         setup.graph = setup_dict["graph"]
         setup.iterations = setup_dict["iterations"]
         setup.topology = setup_dict["topology"]
         setup.verbosity = setup_dict["verbosity"]
         setup.local_params = setup_dict["local_params"]
-        setup.max_z =  setup_dict["max_z"]
+        # setup.max_z = setup_dict["max_z"]
         setup.threshold = setup_dict["threshold"]
 
         pattern = re.compile("^<class '([^']+)'>$")
