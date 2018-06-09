@@ -127,7 +127,7 @@ def make_rt_params(parameters):
         rt_params.set_keep_prob(parameters.keep_prob)
 
     if parameters.check_overflow:
-        rt_params.set_chck_overflow(parameters.check_overflow)
+        rt_params.set_check_overflow(parameters.check_overflow)
 
     if parameters.threshold:
         rt_params.set_threshold(parameters.threshold)

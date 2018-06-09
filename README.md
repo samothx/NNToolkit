@@ -17,14 +17,9 @@ It expects a dictionary on return that contains the parameters computed by the f
 handed back from the next layer.
 With this it can (if configured to do so) compute the derivatives dW,dB,dA, update the matrix W,b and 
 hand back up the result and dA to the calling function.   
-- Class **Terminal** - the last layer is a special layer implemented in class terminal. It computes the 
-result vector Y_hat and if configured to do so the cost function and the derivatives with respect to 
-the activation A. These values are handed back to the calling function and travel back up the recursive chain. 
-The Terminal class will be replaced by a set of classes that represent other result types. The current implementation 
-only implements the functionality for classification problems.   
-- Class **Activation** - a set of classes, Sigmoid, TanH and ReLU that compute the activation function and its derivatives. 
-Input is Z and dA the derivatives handed back from the next layer. Each layer uses an 
-instance of one of these classes to compute the activation function and the derivatives.
+- Class **Activation** - a set of classes (Sigmoid, Softmax, TanH and ReLU) that compute the activation function and its 
+derivatives da. They also compute the cost function (cost & dz) and y^. Cost and y^ are only implemented for Softmax and 
+Sigmoid as thes values are only needed for the output layer. 
 
 Further modules provide helper functions to create networks from parameters and to learn and evaluate a network.    
 
@@ -33,11 +28,12 @@ Further modules provide helper functions to create networks from parameters and 
 This is work in progress. So far the network supports the following features:
 - Supervised machine learning
 - Currently supports only classification problems
-. supports activation functions ReLU, Tanh, Sigmoid
+- Supports activation functions ReLU, Tanh, Sigmoid, Softmax
 - Automatic weight initialization with he / xavier
 - Free choice of topography
 - Various hyper parameters.
 - L2 regularization.
+- Dropout regularization.
 - Adaptive learn rate.
 - Momentum, RMSProp & Adam Gradient Descent
 - Gradient checking.
@@ -51,8 +47,8 @@ This is work in progress. So far the network supports the following features:
 
 ## Todos
 Soon to be added missing Features are:
-- Support for Drop-Out regularization
-- Support for Softmax activation
+- Add a jupyter notebook with a proble to play with
+- Support for layerwise dropout
 - Support for normalization of input
 - Support for more activation functions
 - Support for linear regression Problems

@@ -53,7 +53,7 @@ class RuntimeParams:
     def get_keep_prob(self):
         return self.__keep_prob
 
-    def set_chck_overflow(self, co):
+    def set_check_overflow(self, co):
         self.__check_overflow = co
 
     def get_check_overflow(self):

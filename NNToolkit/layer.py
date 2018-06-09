@@ -75,7 +75,8 @@ class Layer:
         # print("layer:" + str(self.__layer_idx) + " a:" + str(a_prev.shape))
         z = np.dot(w, a_prev) + b
 
-        a_next = self.__activation.forward(z)
+        check_overflow = params.get_check_overflow()
+        a_next = self.__activation.forward(z, check_overflow=check_overflow)
 
         if params.is_learn() & (self.__next_layer is not None):
             keep_prop = params.get_keep_prob()
@@ -108,7 +109,7 @@ class Layer:
 
             if params.is_learn():
                 res.cost, dz = self.__activation.get_cost(a_next, params.get_y(), True,
-                                                          check_overflow=params.get_check_overflow())
+                                                          check_overflow=check_overflow)
 
         if res.is_error():
             return res

@@ -5,7 +5,7 @@ class Activation:
     def __init__(self, act_type):
         self.__type = act_type
 
-    def forward(self, a):
+    def forward(self, z, ** kwargs):
         raise TypeError("forward() is not meant to called on Activation base class")
 
     def get_grads(self, z, da):
@@ -30,7 +30,7 @@ class Sigmoid(Activation):
         super().__init__("sigmoid")
         self.__a = None
 
-    def forward(self, z):
+    def forward(self, z, ** kwargs):
         return np.divide(1, (1 + np.exp(-z)))
 
     def get_grads(self, z, da):
@@ -84,7 +84,7 @@ class TanH(Activation):
     def __init__(self):
         super().__init__("tanh")
 
-    def forward(self, z):
+    def forward(self, z, ** kwargs):
         return np.tanh(z)
 
     def get_grads(self, z, da):
@@ -102,7 +102,7 @@ class ReLU(Activation):
         super().__init__("relu")
         self.__ones = None
 
-    def forward(self, z):
+    def forward(self, z, ** kwargs):
         return np.maximum(0, z)
 
     def get_grads(self, z, da):
@@ -124,8 +124,17 @@ class Softmax(Activation):
         super().__init__("softmax")
         self.__a = None
 
-    def forward(self, z):
-        raise TypeError("forward() is not implemented on Softmax class")
+    def forward(self, z, **kwargs):
+        # if "check_overflow" in kwargs:
+        #     if kwargs["check_overflow"]:
+        #         zeros = np.int64(z == 0)
+        #         if np.max(zeros) > 0:
+        #             print("add epsilon")
+        #             z = z + (zeros * 1e-8)
+
+        t = np.exp(z)
+        return t / np.sum(t, axis=0, keepdims=True)
+        # raise TypeError("forward() is not implemented on Softmax class")
 
     def get_grads(self, z, da):
         # TODO: not really needed but sort out anyway..
@@ -146,12 +155,11 @@ class Softmax(Activation):
         # anti div by zero
 
         if "check_overflow" in kwargs:
-            if np.min(a) == 0:
+            if kwargs["check_overflow"]:
                 zeros = np.int64(a == 0)
                 if np.count_nonzero(zeros) > 0:
                     a = a + (zeros * 1e-8)
 
-            if np.max(a) == 1:
                 ones = np.int64(a == 1)
                 if np.count_nonzero(ones) > 0:
                     a = a - (ones * 1e-8)
