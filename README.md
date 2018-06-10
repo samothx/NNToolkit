@@ -48,6 +48,7 @@ This is work in progress. So far the network supports the following features:
 ## Todos
 Soon to be added missing Features are:
 - Add a jupyter notebook with a proble to play with
+- Support convolutional networks
 - Support for layerwise dropout
 - Support for normalization of input
 - Support for more activation functions
