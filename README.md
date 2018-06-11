@@ -59,10 +59,24 @@ I will update this project while the courses I am hearing progress and add more 
 
 ## Example Code
 
-Samples are in the sample sub directory. The handwriting example uses input data from a previous course. 
-I am not sure about copyright copyright on that data, so I have not checked it in, sorry. I will try to find out if I can do so. 
+Samples are in the sample sub directory. The handwriting example uses a subset of the MNIST handwritten digits example 
+also called the Drosophila of image processing because it has been used in so many image recognition projects.   
+The file samples/handwriting.py sets up a network and trains it to recognize the hand written digits. So far I have
+best results in the range of 0.5% on the training set and 0-2% on the test set. The results on the test set are 
+partially due to the small test set I am using. I was desperate to get as much training examples as possible as the 
+dataset consists only of 5000 examples so my test set is only of size 50. So one sample not recognized immedeately gives 
+me an error of 2%.
 
-Send me a message for working parameter sets.   
+Its pretty easy to modify this so play around with the code in ```init_hand_writing() ```. The function call
+```divide2sets(x_raw, y_class, 0.01, 0, True, True)``` does the splitting up of the dataset. First and second argument 
+are the input X and labels Y, next parameters are the relative sizes of cross validation and test set (0.01 = 1%) and 
+the last two boolean values are shuffle (does the data have to be 
+shuffled before splitting) and transpose (does the data have to be transposed). 
+
+So far the project is still missing a lot of documentation but I have commented the parameters used in handwriting. 
+If you have seen the coursera lectures on Deep Learning you will recognize most of the parameter names.    
+
+Send me a message for working parameter sets.    
 
 ## Test Cases
 Current test cases are rather simple self-generated input. I have managed to get the network to learn the 

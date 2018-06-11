@@ -39,31 +39,31 @@ def init_hand_writing():
 
     parameters = SetupParams()
     # parameters.check_overflow = True
-    parameters.alpha = 0.0007
-    parameters.alpha_min = 0.0005
-    parameters.beta1 = 0.95
-    parameters.beta2 = 0.999
-    parameters.lambd = 3
-    parameters.keep_prob = 1
-    parameters.iterations = 300
-    parameters.graph = True
-    parameters.topology = [n_0, 200,100, n_l]
-    parameters.activations = [act.ReLU,act.Softmax]
-    parameters.x = res["X_train"]
-    parameters.y = res["Y_train"]
+    parameters.alpha = 0.0007           # learn rate
+    parameters.alpha_min = 0.0005       # use adaptive learn rate this is the value after max iterations/epochs
+    parameters.beta1 = 0.95             # parameter for momentum/adam optimizer - switches on momentum
+    parameters.beta2 = 0.999            # parameter for adam optimizer. if this parameters and beta1 is given adam optimizer is used
+    parameters.lambd = 3                # L2 regularization parameter
+    parameters.keep_prob = 1            # Dropout regularization parameter(1-> no dropout)
+    parameters.iterations = 300         # Max number of iterations / epochs
+    parameters.graph = True             # Collect data for and display graph whe finished
+    parameters.topology = [n_0, 200,100, n_l]       # layer sizes
+    parameters.activations = [act.ReLU,act.Softmax] # activations. If 2 activations are given but more layers present
+                                                    # the first activation will be used for all but the last layers
+    parameters.x = res["X_train"]       # training data set
+    parameters.y = res["Y_train"]       # training labels
 
     if "X_cv" in res:
-        parameters.x_cv = res["X_cv"]
-        parameters.y_cv = res["Y_cv"]
+        parameters.x_cv = res["X_cv"]   # cross validation data set
+        parameters.y_cv = res["Y_cv"]   # cross validation labels
 
     print("sum y_train:" + str(np.sum(res["Y_train"])))
     print("sum y:" + str(np.sum(y_raw > 0)))
     return parameters
 
 
-parameters = init_hand_writing()
-network = learn(parameters)
-
+parameters = init_hand_writing()        # initialize
+network = learn(parameters)             # learn
 
 
 network.get_weights(parameters.params)
@@ -77,8 +77,8 @@ else:
 
 file += ".json.gz"
 
-save_params(parameters.to_dict(),file)
 
+save_params(parameters.to_dict(),file)
 
 #ts = "{:%Y%m%d-%H%M%S}".format(datetime.datetime.now())
 #if "X_t" in params:
