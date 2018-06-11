@@ -1,6 +1,5 @@
 /venv
 /testCases
-/data/mlnn.mat
 __pycache__
 .gz
 .idea
