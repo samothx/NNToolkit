@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../')
+
 from PIL import Image, ImageDraw, ImageFilter
 import matplotlib.pyplot as plt
 import math
